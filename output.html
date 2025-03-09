@@ -1,0 +1,170 @@
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파이썬 데이터 분석 기초</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            color: #333;
+            line-height: 1.8;
+        }
+        h1, h2, h3 {
+            color: #4a148c;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            line-height: 1.2;
+        }
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            border-bottom: 3px solid #7b1fa2;
+            padding-bottom: 0.3em;
+        }
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            border-left: 5px solid #9c27b0;
+            padding-left: 0.8em;
+        }
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background-color: #6a1b9a;
+            color: #ffffff;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        p {
+            font-size: 1rem;
+            margin-bottom: 1.2em;
+        }
+        ul {
+            list-style: none;
+            padding-left: 20px;
+            position: relative;
+        }
+        ul li {
+            position: relative;
+            margin-bottom: 0.5em;
+        }
+        ul li span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #9c27b0;
+            margin-right: 10px;
+            position: absolute;
+            left: -20px;
+            top: 8px;
+        }
+        pre {
+            background-color: #f5f0ff;
+            padding: 1em;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1.5em;
+        }
+        th, td {
+            border: 1px solid #e1bee7;
+            padding: 0.5em;
+            text-align: left;
+        }
+        th {
+            background-color: #9c27b0;
+            color: white;
+            font-weight: 700;
+        }
+        blockquote {
+            border-left: 4px solid #9c27b0;
+            padding: 0.5em 1em;
+            margin: 1.5em 0;
+            font-style: italic;
+            color: #6a1b9a;
+            background-color: #f9f2ff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>파이썬 데이터 분석 기초</h1>
+
+    <h2>소개</h2>
+    <p>파이썬은 데이터 분석을 위한 강력한 도구입니다. 다양한 라이브러리를 활용하여 데이터를 효과적으로 처리할 수 있습니다.</p>
+
+    <h3>필요한 라이브러리</h3>
+    <ul>
+        <li><span></span>pandas: 데이터 처리 및 분석</li>
+        <li><span></span>numpy: 수치 계산</li>
+        <li><span></span>matplotlib: 데이터 시각화</li>
+        <li><span></span>seaborn: 고급 데이터 시각화</li>
+    </ul>
+
+    <h2>데이터 불러오기</h2>
+    <pre><code>import pandas as pd
+import numpy as np
+
+# CSV 파일 불러오기
+df = pd.read_csv('data.csv')
+print(df.head())
+</code></pre>
+
+    <h2>데이터 전처리</h2>
+    <p>데이터 전처리는 분석 과정에서 매우 중요한 단계입니다.</p>
+
+    <h3>결측치 처리</h3>
+    <p>결측치는 분석 결과에 영향을 줄 수 있으므로 적절히 처리해야 합니다.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>방법</th>
+                <th>장점</th>
+                <th>단점</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>삭제</td>
+                <td>간단함</td>
+                <td>데이터 손실</td>
+            </tr>
+            <tr>
+                <td>평균값 대체</td>
+                <td>데이터 보존</td>
+                <td>분포 변화</td>
+            </tr>
+            <tr>
+                <td>예측값 대체</td>
+                <td>정확도 높음</td>
+                <td>복잡함</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <blockquote>데이터의 특성에 따라 적절한 방법을 선택해야 합니다.</blockquote>
+
+    <h2>FAQ</h2>
+
+    <h3>Q: 파이썬으로 할 수 있는 데이터 분석은 무엇인가요?</h3>
+    <p>A: 파이썬은 데이터 정제, 변환, 시각화, 모델링 등 다양한 데이터 분석 작업을 수행할 수 있습니다.</p>
+
+    <h3>Q: 초보자가 배우기 쉬운 라이브러리는 무엇인가요?</h3>
+    <p>A: pandas와 matplotlib이 초보자에게 추천되는 라이브러리입니다. 직관적인 API와 풍부한 문서를 제공합니다.</p>
+
+</body>
+</html>
+```
