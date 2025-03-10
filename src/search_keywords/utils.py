@@ -25,7 +25,7 @@ import zipfile
 import io
 import random
 from urllib.parse import urlparse, parse_qs
-from logger import log  # log 함수만 import
+from src.search_keywords.logger import log  # log 함수만 import
 
 def install_and_extract_chromedriver():
     """
