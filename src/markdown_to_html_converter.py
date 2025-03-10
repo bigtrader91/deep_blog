@@ -123,7 +123,7 @@ THEME_STYLES = {
 }
 
 # LLM 초기화 함수
-def get_llm(model_name: str = "gpt-4o", temperature: float = 0.0) -> ChatOpenAI:
+def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.0) -> ChatOpenAI:
     """
     LLM 인스턴스를 생성합니다.
     
@@ -319,8 +319,7 @@ def convert_section_to_html(state: Dict[str, Any]) -> Dict[str, Any]:
     doc_state.html_output = "\n".join(all_html_sections)
     
     return doc_state.to_dict()
-
-# 목차 생성 함수
+# 목차 생성 함수 수정 (불필요한 항목 필터링 및 TOC 삽입 위치 조정)
 def generate_toc(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     문서 구조에 기반하여 목차를 생성합니다.
@@ -333,55 +332,72 @@ def generate_toc(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     doc_state = DocumentState.from_dict(state)
     document_structure = doc_state.document_structure
-    
-    # document_structure에 제목 정보가 있는지 확인
+
     if not document_structure or "sections" not in document_structure:
         return state
-    
-    # 목차 필요 여부 확인
+
     has_toc = document_structure.get("has_toc", False)
     if not has_toc:
         return state
-    
-    # 목차 항목 추출
+
     toc_items = []
-    for section in document_structure["sections"]:
+    seen_titles = set()
+    # Conclusion 섹션은 마지막 항목만 TOC에 포함하도록 처리
+    conclusion_indices = [i for i, s in enumerate(document_structure["sections"]) 
+                          if s.get("content", "").strip().lower() == "conclusion"]
+    last_conclusion_index = max(conclusion_indices) if conclusion_indices else None
+
+    for i, section in enumerate(document_structure["sections"]):
         if section.get("type") in ["title", "subtitle"] and section.get("level", 0) <= 3:
+            title_text = re.sub(r'^#+\s+', '', section.get("content", "").strip())
+            # 불필요한 항목 필터링: 'Sources' (또는 '출처')는 제외
+            if title_text.lower() in ["sources", "출처"]:
+                continue
+            # Conclusion은 마지막 항목만 포함
+            if title_text.lower() == "conclusion":
+                if last_conclusion_index is not None and i != last_conclusion_index:
+                    continue
+            # 동일 제목이 중복되는 경우 한 번만 포함
+            if title_text in seen_titles:
+                continue
+            seen_titles.add(title_text)
             section_id = section.get("section_id", "")
             if section_id:
-                content = section.get("content", "").strip()
-                # 마크다운 제목 형식(#) 제거
-                content = re.sub(r'^#+\s+', '', content)
                 toc_items.append({
-                    "title": content,
+                    "title": title_text,
                     "id": section_id,
                     "level": section.get("level", 1)
                 })
-    
-    # 목차 HTML 생성
+
     if toc_items:
         theme = doc_state.theme
         theme_styles = THEME_STYLES.get(theme, THEME_STYLES[Theme.PURPLE])
-        
         toc_html = f'<div style="{theme_styles["toc"]}">\n'
         toc_html += f'  <div style="margin-bottom: 15px;">\n'
         toc_html += f'    <h3 style="{theme_styles["toc_title"]}">목차</h3>\n'
         toc_html += f'  </div>\n'
         toc_html += f'  <div style="display: flex; flex-direction: column; gap: 10px;">\n'
-        
         for item in toc_items:
             indent = "    " * (item["level"] - 1) if item["level"] > 1 else ""
             toc_html += f'{indent}    <a href="#{item["id"]}" style="{theme_styles["toc_link"]}">{item["title"]}</a>\n'
-        
         toc_html += f'  </div>\n'
         toc_html += f'</div>\n'
-        
-        # HTML 출력 시작 부분에 목차 추가
-        doc_state.html_output = toc_html + doc_state.html_output
-    
+
+        # TOC를 문서의 첫 번째 h1 이후, 그리고 첫 번째 h2 태그 바로 전(있으면) 위치에 삽입
+        html_output = doc_state.html_output
+        pos_h1 = html_output.find("</h1>")
+        pos_h2 = html_output.find("<h2", pos_h1 + len("</h1>")) if pos_h1 != -1 else -1
+        if pos_h2 != -1:
+            new_html = html_output[:pos_h2] + toc_html + html_output[pos_h2:]
+        elif pos_h1 != -1:
+            new_html = html_output[:pos_h1+len("</h1>")] + toc_html + html_output[pos_h1+len("</h1>"):]
+        else:
+            new_html = toc_html + html_output
+        doc_state.html_output = new_html
+
     return doc_state.to_dict()
 
-# 최종 검토 및 수정 함수
+# 최종 검토 및 수정 함수 수정 (중복 Conclusion 섹션 제거 지침 추가)
 def final_review(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     최종 HTML 출력을 검토하고 수정합니다.
@@ -394,32 +410,34 @@ def final_review(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     doc_state = DocumentState.from_dict(state)
     html_output = doc_state.html_output
-    
+
     llm = get_llm()
-    
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", """당신은 HTML 코드 검토 전문가입니다.
-        다음 HTML 코드를 검토하고 필요한 경우 수정하세요.
-        
-        확인해야 할 사항:
-        1. 모든 HTML 태그가 올바르게 닫혔는지
-        2. 모든 style 속성이 올바른 형식인지
-        3. id 속성이 적절하게 사용되었는지
-        4. 전체적인 구조가 일관되고 가독성이 좋은지
-        
-        수정한 완전한 HTML 코드만 반환하세요. 설명이나 주석은 필요하지 않습니다.
+다음 HTML 코드를 검토하고 필요한 경우 수정하세요.
+
+확인해야 할 사항:
+1. 모든 HTML 태그가 올바르게 닫혔는지
+2. 모든 style 속성이 올바른 형식인지
+3. id 속성이 적절하게 사용되었는지
+4. 전체적인 구조가 일관되고 가독성이 좋은지
+5. 'Conclusion' 섹션이 문서 마지막에 단 한 번만 등장하도록 하세요. 중복된 'Conclusion' 섹션이 있다면 이를 통합하거나 제거하세요.
+
+수정한 완전한 HTML 코드만 반환하세요. 설명이나 주석은 필요하지 않습니다.
         """),
         ("human", "{html}")
     ])
-    
+
     chain = prompt | llm
     response = chain.invoke({"html": html_output})
-    
+
     # 검토된 HTML로 업데이트
     doc_state.html_output = response.content.strip()
     doc_state.processing_complete = True
-    
+
     return doc_state.to_dict()
+
 
 # 워크플로우 그래프 설정
 def create_markdown_to_html_graph() -> StateGraph:

@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 from PySide6 import QtWidgets
-from gold_keyword_ui import Ui_MainWindow
+
 from PIL import Image, ImageDraw, ImageFont
 import requests
 import pandas as pd
@@ -32,12 +32,14 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QFont, QFontDatabase, QTextCursor
 from PySide6.QtCore import QDateTime, QDate, QTime, Qt, QThread
 from PySide6.QtGui import QIcon, QPixmap
-
-from naver_keywords_collector import 정보성키워드수집, 상품키워드수집, 데이터랩수집, 연관키워드수집, KeywordCollectorWorker
-from utils import extract_category_id, create_image_from_text, create_log_file, DocumentCountWorker, ensure_directory, KEYWORD_DIRS
 from concurrent.futures import ThreadPoolExecutor
-from logger import set_logger  # 로거 설정을 위한 함수만 import
 from configparser import ConfigParser
+
+from src.search_keywords.gold_keyword_ui import Ui_MainWindow
+from src.search_keywords.naver_keywords_collector import 정보성키워드수집, 상품키워드수집, 데이터랩수집, 연관키워드수집, KeywordCollectorWorker
+from src.search_keywords.utils import extract_category_id, create_image_from_text, create_log_file, DocumentCountWorker, ensure_directory, KEYWORD_DIRS
+from src.search_keywords.logger import set_logger  # 로거 설정을 위한 함수만 import
+
 
 # 전역 로거 인스턴스를 저장할 변수
 _logger = None

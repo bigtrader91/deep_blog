@@ -2,17 +2,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PySide6.QtCore import QObject, Signal, QThread
-from utils import (
-    parse_config, 
-    Signature, 
-    install_and_extract_chromedriver,
-    DocumentCountWorker,
-    ensure_directory,
-    KEYWORD_DIRS,
-)
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from logger import log  # log 함수만 import
+
 import chromedriver_autoinstaller  # 추가
 
 from datetime import datetime
@@ -27,8 +19,17 @@ import os
 from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
 import subprocess
-
-from utils import extract_category_id
+from src.search_keywords.utils import (
+    parse_config, 
+    Signature, 
+    install_and_extract_chromedriver,
+    DocumentCountWorker,
+    ensure_directory,
+    KEYWORD_DIRS,
+)
+from src.search_keywords.logger import log  # log 함수만 import
+from src.search_keywords.utils import extract_category_id
+from src.search_keywords.utils import get_header
 # 디버깅용 크롬 실행 (이미 실행 중이면 불필요합니다)
 # subprocess.Popen(r'C:\Program Files\Google\Chrome\Application\chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\chromeCookie"')
 
@@ -346,7 +347,7 @@ def 연관키워드수집(keyword):
         uri = "/keywordstool"
         method = "GET"
         
-        from utils import get_header
+        
         r = requests.get(
             BASE_URL + uri + f"?hintKeywords={keyword}&showDetail=1",
             headers=get_header()

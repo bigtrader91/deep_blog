@@ -146,14 +146,8 @@ class LLMClassificationResult(BaseModel):
     """LLM이 최종 분류를 반환"""
     classification: str = Field(..., description="분류 결과. '상품' 또는 '정보성' 중 하나를 예상")
 
-class LLMGenerateTitle(BaseModel):
-    """LLM이 제목 생성"""
-    title: str = Field(..., description="제목 생성")
-
-classification_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-title_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
-
-classification_prompt = ChatPromptTemplate.from_messages([
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+prompt = ChatPromptTemplate.from_messages([
     (
         "system",
         "당신은 네이버 쇼핑검색 결과에 대한 전문 분석가입니다. "
@@ -167,46 +161,18 @@ classification_prompt = ChatPromptTemplate.from_messages([
         "단, 브랜드는 이미 제외된 상태입니다."
     ),
 ])
-
-title_prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "당신은 블로그 제목을 생성하는 전문가입니다. "
-        "입력으로 키워드, 타이틀, 설명들이 주어집니다. "
-        "키워드와 타이틀, 설명들을 참고하여 적절한 제목을 생성해 주세요. "
-        "리뷰와 관련된 제목은 배제하여주세요 "
-    ),
-    (
-        "human",
-        "아래 데이터를 참고하여 적절한 제목을 생성해 주세요. "
-        "{data}"
-    ),
-])
-classification_llm_chain = classification_prompt | classification_llm.with_structured_output(LLMClassificationResult)
-title_llm_chain = title_prompt | title_llm.with_structured_output(LLMGenerateTitle)
-
+llm_chain = prompt | llm.with_structured_output(LLMClassificationResult)
 
 def llm_classify_product_or_info(keyword: str) -> str:
     """
     LLM을 이용해 '상품' vs '정보성' 분류
     """
     try:
-        result = classification_llm_chain.invoke({"keyword": keyword})
+        result = llm_chain.invoke({"keyword": keyword})
         return result.classification
     except Exception as e:
         print("LLM 분류 에러:", e)
         return "정보성"
-
-def llm_generate_title(data: str) -> str:
-    """
-    LLM을 이용해 제목 생성
-    """
-    try:
-        result = title_llm_chain.invoke({"data": data})
-        return result.title
-    except Exception as e:
-        print("LLM 제목 생성 에러:", e)
-        return "제목 생성 불가"
 
 # --------------------
 # 6) 최종 분류 함수
@@ -222,10 +188,11 @@ def classify_keyword(keyword: str) -> KeywordType:
     """
     try:
         # 1) 네이버 쇼핑 검색
+        blog_res = naver_search(keyword, "blog")
         shop_res = naver_search(keyword, "shop")
         if not shop_res or "items" not in shop_res or not shop_res["items"]:
             # 검색 결과 없으면 blog 검색 진행
-            blog_res = naver_search(keyword, "blog")
+            
             blog_cnt = len(blog_res["items"]) if blog_res and "items" in blog_res else 0
             
             if blog_cnt > 0:
@@ -234,7 +201,9 @@ def classify_keyword(keyword: str) -> KeywordType:
                     "type": "information",
                     "confidence": 0.7,
                     "analysis": f"쇼핑 검색 결과가 없고, 블로그 결과 {blog_cnt}개 => 정보성 키워드로 추정",
-                    "category": None
+                    "category": None,
+                    "titles": [i['title'] for i in blog_res['items']],
+                    "description": [i['description'] for i in blog_res['items']],
                 }
             else:
                 return {
@@ -242,7 +211,9 @@ def classify_keyword(keyword: str) -> KeywordType:
                     "type": "unknown",
                     "confidence": 0.0,
                     "analysis": "검색 결과가 전혀 없습니다.",
-                    "category": None
+                    "category": None,
+                    "titles": None,
+                    "description": None
                 }
         
         # 2) 브랜드 일관성 분석
@@ -258,7 +229,9 @@ def classify_keyword(keyword: str) -> KeywordType:
                 "type": "brand",
                 "confidence": confidence,
                 "analysis": f"브랜드 일관성 {confidence*100:.1f}%. 계량적으로 브랜드로 판단",
-                "category": None
+                "category": None,
+                "titles": [i['title'] for i in blog_res['items']],
+                "description": [i['description'] for i in blog_res['items']],
             }
         else:
             # 브랜드가 아니라면 LLM으로 '상품' vs '정보성' 판별
@@ -272,7 +245,9 @@ def classify_keyword(keyword: str) -> KeywordType:
                     "type": "product",
                     "confidence": 0.8,  # 임의로 0.8 부여
                     "analysis": "LLM 분류 결과: 상품",
-                    "category": high_freq_categories
+                    "category": high_freq_categories,
+                    "titles": [i['title'] for i in blog_res['items']],
+                    "description": [i['description'] for i in blog_res['items']],   
                 }
             else:
                 return {
@@ -280,7 +255,9 @@ def classify_keyword(keyword: str) -> KeywordType:
                     "type": "information",
                     "confidence": 0.8,
                     "analysis": "LLM 분류 결과: 정보성",
-                    "category": None
+                    "category": None,
+                    "titles": [i['title'] for i in blog_res['items']],
+                    "description": [i['description'] for i in blog_res['items']],
                 }
     except Exception as e:
         import traceback
@@ -289,7 +266,9 @@ def classify_keyword(keyword: str) -> KeywordType:
             "type": "unknown",
             "confidence": 0.0,
             "analysis": f"분류 중 예외 발생: {str(e)}\n{traceback.format_exc()}",
-            "category": None
+            "category": None,
+            "titles": [i['title'] for i in blog_res['items']],
+            "description": [i['description'] for i in blog_res['items']],
         }
 
 # --------------------
@@ -304,3 +283,5 @@ if __name__ == "__main__":
         print(f"신뢰도: {result['confidence']:.2f}")
         print(f"분석: {result['analysis']}")
         print(f"카테고리: {result['category']}")
+        print(f"titles: {result['titles']}")
+        print(f"description: {result['description']}")
