@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반응형 SVG 카드 다이어그램 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .resizable-container {
+            width: 100%;
+            height: 0;
+            padding-bottom: 100%; /* 1:1 비율 유지 */
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        .svg-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .controls button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background-color: #45a049;
+        }
+        /* 다양한 기기에서의 반응형 설정 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>반응형 SVG 카드 다이어그램</h1>
+        <p>브라우저 크기를 조절하거나 아래 버튼으로 컨테이너 크기를 변경해보세요.</p>
+        
+        <div class="controls">
+            <button onclick="resize(50)">50%</button>
+            <button onclick="resize(75)">75%</button>
+            <button onclick="resize(100)">100%</button>
+        </div>
+        
+        <div class="resizable-container" id="container">
+            <div class="svg-wrapper">
+                <?xml version="1.0" encoding="utf-8" ?>
+<svg baseProfile="tiny" height="100%" preserveAspectRatio="xMidYMid meet" version="1.2" viewBox="0 0 800 1060" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs /><rect fill="#21364b" height="1060" width="800" x="0" y="0" /><image height="300" width="800" x="0" xlink:href="https://pixabay.com/get/g1ce483b5ce7f2d307d826196685ccfbb37b3a97f0841fe868f2588937be866c0a749ff3e26778978ec1c8cefd3b2b6dd530aecd8e4cc31b74881d07d14c78172_1280.jpg" y="0" /><rect fill="#21364b" height="300" opacity="0.3" width="800" x="0" y="0" /><text dominant-baseline="middle" fill="#FFFFFF" font-family="Arial" font-size="32px" font-weight="bold" text-anchor="middle" x="400.0" y="260">🚨 정치 스캔들: 여야, 서로 고발전! 진실은?</text><rect fill="#000000" height="144" opacity="0.2" rx="10" ry="10" width="680.0" x="63.0" y="353" /><rect fill="#E8F4F9" height="144" rx="10" ry="10" width="680.0" x="60.0" y="350" /><text fill="#21364b" font-family="Arial" font-size="20px" font-weight="bold" text-anchor="start" x="90.0" y="400">정치 스캔들: 여야, 서로 고발전! 진실은?</text><text fill="#333333" font-family="Arial" font-size="16px" text-anchor="start" x="90.0" y="430">윤 대통령 구속 과정 둘러싼 여야의 첨예한 대립! 누가 진실을 은폐하고 있을까요? 지금 바로 스크롤하여</text><text fill="#333333" font-family="Arial" font-size="16px" text-anchor="start" x="90.0" y="454">확인하세요!</text><rect fill="#000000" height="144" opacity="0.2" rx="10" ry="10" width="680.0" x="63.0" y="517" /><rect fill="#E8F4F9" height="144" rx="10" ry="10" width="680.0" x="60.0" y="514" /><text fill="#21364b" font-family="Arial" font-size="20px" font-weight="bold" text-anchor="start" x="90.0" y="564">여당 주장</text><text fill="#333333" font-family="Arial" font-size="16px" text-anchor="start" x="90.0" y="594">심우정 검찰총장이 관련 혐의를 조작했다는 주장! '증거 없는 기소'로 정쟁에 이용했다는 비판이 나오고 있습니다.</text><rect fill="#000000" height="144" opacity="0.2" rx="10" ry="10" width="680.0" x="63.0" y="681" /><rect fill="#E8F4F9" height="144" rx="10" ry="10" width="680.0" x="60.0" y="678" /><text fill="#21364b" font-family="Arial" font-size="20px" font-weight="bold" text-anchor="start" x="90.0" y="728">야당 주장</text><text fill="#333333" font-family="Arial" font-size="16px" text-anchor="start" x="90.0" y="758">내란 수괴 윤석열 구속 과정에 외압이 있었다는 의혹! 검찰총장을 공수처에 고발하며 진상규명을 요구하고 있습니다.</text><rect fill="#000000" height="168" opacity="0.2" rx="10" ry="10" width="680.0" x="63.0" y="845" /><rect fill="#E8F4F9" height="168" rx="10" ry="10" width="680.0" x="60.0" y="842" /><text fill="#21364b" font-family="Arial" font-size="20px" font-weight="bold" text-anchor="start" x="90.0" y="892">국민 반응</text><text fill="#333333" font-family="Arial" font-size="16px" text-anchor="start" x="90.0" y="922">SNS와 여론조사에서는 '정치권 싸움에 지친다'는 반응이 지배적. 진실 규명보다 민생을 우선해야 한다는 목소리가</text><text fill="#333333" font-family="Arial" font-size="16px" text-anchor="start" x="90.0" y="946">높습니다.</text></svg>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function resize(percent) {
+            document.getElementById('container').style.width = percent + '%';
+            document.getElementById('container').style.paddingBottom = percent + '%';
+        }
+        
+        // 페이지 로드 시 SVG 크기 최적화
+        window.addEventListener('load', function() {
+            // SVG가 로드될 때 적절한 크기로 조정
+            const svgElements = document.querySelectorAll('svg');
+            svgElements.forEach(function(svg) {
+                // SVG에 viewBox가 있는지 확인
+                if (!svg.getAttribute('viewBox') && 
+                    svg.getAttribute('width') && 
+                    svg.getAttribute('height')) {
+                    // viewBox 속성 추가
+                    const width = svg.getAttribute('width');
+                    const height = svg.getAttribute('height');
+                    svg.setAttribute('viewBox', `0 0 ${width.replace('px', '')} ${height.replace('px', '')}`);
+                }
+                
+                // 반응형 속성 추가
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+                svg.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
