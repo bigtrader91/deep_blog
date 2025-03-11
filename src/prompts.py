@@ -1,4 +1,4 @@
-report_planner_query_writer_instructions = """You are performing research for a report. 
+report_planner_query_writer_instructions = """Answer in Korean. You are performing research for a blog post.
 
 <Report topic>
 {topic}
@@ -9,73 +9,92 @@ report_planner_query_writer_instructions = """You are performing research for a 
 </Report organization>
 
 <Task>
-Your goal is to generate {number_of_queries} web search queries that will help gather information for planning the report sections. 
+Your goal is to generate {number_of_queries} web search queries that will help gather information for planning a 5-step blog post.
+
+The 5-step blog writing process is:
+
+1) Step 1: Write a title (<h1>), a hooking phrase, a greeting of at least 150 characters, and a table of contents with 6 items (each item has an id).
+2) Step 2: Write content for table-of-contents items 1 to 3. Each section must have at least 200 characters. The second section includes a table, and the third section includes a list.
+3) Step 3: Write content for table-of-contents items 4 to 6. Each section must have at least 200 characters. The fifth section includes a table, and the sixth section includes a list.
+4) Step 4: Create an FAQ with 6 questions and answers. Use HTML elements to emphasize the Q&A format.
+5) Step 5: Write a finishing statement for the blog.
 
 The queries should:
+1. Be related to the blog topic (i.e., the Report topic).
+2. Help satisfy the requirements specified in the above 5-step structure.
+3. Avoid generating queries that might lead to duplicate or generic headings (e.g., multiple "Conclusion" sections or "Sources").
 
-1. Be related to the Report topic
-2. Help satisfy the requirements specified in the report organization
-3. Avoid generating queries that might lead to duplicate or generic section headings (e.g., "Sources" or multiple "Conclusion" sections)
-
-Make the queries specific enough to find high-quality, relevant sources while covering the breadth needed for the report structure.
+Make these queries specific enough to find high-quality, relevant sources while covering the breadth needed for the blog post.
 </Task>
 """
 
-report_planner_instructions = """I want a plan for a report that is concise and focused.
+
+report_planner_instructions = """Answer in Korean. I want a plan for a blog post that follows a 5-step structure, focusing on clarity and avoiding unnecessary overlap.
 
 <Report topic>
-The topic of the report is:
+The topic of the blog post is:
 {topic}
 </Report topic>
 
 <Report organization>
-The report should follow this organization: 
+The blog should follow this organization:
 {report_organization}
 </Report organization>
 
 <Context>
-Here is context to use to plan the sections of the report: 
+Here is context to use in planning the sections:
 {context}
 </Context>
 
 <Task>
-Generate a list of sections for the report. Your plan should be tight and focused with NO overlapping sections or unnecessary filler. 
+Generate a plan for a 5-step blog post with the following specific requirements:
 
-For example, a good report structure might look like:
-1/ intro
-2/ overview of topic A
-3/ overview of topic B
-4/ comparison between A and B
-5/ conclusion
+1️⃣ STEP 1: Title, hooking phrase, greeting, table of contents
+   - Use an <h1> tag for the title.
+   - Write a hooking phrase that grabs the reader's attention.
+   - Greeting text must be at least 150 characters.
+   - The table of contents must have 6 items, each with an id attribute.
 
-Each section should have the fields:
+2️⃣ STEP 2: Write content for TOC items 1~3
+   - Each section must have at least 200 characters.
+   - The second section includes a table.
+   - The third section includes a list.
 
-- Name - Name for this section of the report.
-- Description - Brief overview of the main topics covered in this section.
-- Research - Whether to perform web research for this section of the report.
-- Content - The content of the section, which you will leave blank for now.
+3️⃣ STEP 3: Write content for TOC items 4~6
+   - Each section must have at least 200 characters.
+   - The fifth section includes a table.
+   - The sixth section includes a list.
+
+4️⃣ STEP 4: FAQ
+   - Provide 6 Q&A pairs.
+   - Use HTML-based emphasis for the questions and answers (e.g., <h3>, <p>, etc.).
+
+5️⃣ STEP 5: Final finishing statement
+   - Write a concluding remark for the blog post.
+   - (Optional) You may also add tags or a brief CTA if relevant.
+
+Your plan should be tight and focused with NO overlapping sections or unnecessary filler.
+Each section in your plan must include:
+- Name: a short, descriptive title.
+- Description: what will be covered in that step/section.
+- Research: whether web research is needed for the section.
+- Content: leave this blank now; it will be filled in later.
 
 Integration guidelines:
-- Include examples and implementation details within main topic sections, not as separate sections.
-- Ensure each section has a distinct purpose with no content overlap.
-- Combine related concepts rather than separating them.
+- Ensure each step is clearly distinct and that the final blog post covers all 5 steps.
+- Avoid duplicating the blog title or creating multiple finishing sections.
+- Double-check there are exactly 6 items in the table of contents for Steps 2 and 3.
 
-Additional Guidelines:
-- Ensure that the Table of Contents (TOC) is generated only from the primary report sections (exclude generic headings like "Sources").
-- Place the TOC after the report title and introduction (or greeting) and before the main sections (i.e., immediately before the first h2 section).
-- Only include one "Conclusion" section at the end of the report.
-- Avoid duplicate main titles (e.g., the report title should appear only once).
-
-Before submitting, review your structure to ensure it has no redundant sections and follows a logical flow.
+Before submitting, review your structure to ensure it follows the above steps and avoids redundant or overlapping content.
 </Task>
 
 <Feedback>
-Here is feedback on the report structure from review (if any):
+Here is feedback on the blog structure from review (if any):
 {feedback}
 </Feedback>
 """
 
-query_writer_instructions = """You are an expert technical writer crafting targeted web search queries that will gather comprehensive information for writing a technical report section.
+query_writer_instructions = """Answer in Korean. You are an expert technical writer crafting targeted web search queries to gather comprehensive information for a specific blog section.
 
 <Report topic>
 {topic}
@@ -86,55 +105,53 @@ query_writer_instructions = """You are an expert technical writer crafting targe
 </Section topic>
 
 <Task>
-Your goal is to generate {number_of_queries} search queries that will help gather comprehensive information above the section topic. 
+Your goal is to generate {number_of_queries} search queries that will help gather comprehensive information on the above section topic. The final blog post follows a 5-step structure, with particular emphasis on tables, lists, and an FAQ section.
 
 The queries should:
+1. Be closely related to the topic.
+2. Address different aspects of the section topic.
+3. Avoid generating duplicate or overly generic queries (e.g., repeating "Conclusion" or "Sources").
 
-1. Be related to the topic.
-2. Examine different aspects of the topic.
-3. Avoid queries that might encourage duplicate or generic sections (e.g., multiple "Sources" or "Conclusion" sections).
-
-Make the queries specific enough to find high-quality, relevant sources.
+Make the queries specific enough to find high-quality, relevant sources for writing this blog section.
 </Task>
 """
 
-section_writer_instructions = """Write one section of a research report.
+
+section_writer_instructions = """Answer in Korean. Write one section of a 5-step blog post.
 
 <Task>
-1. Review the report topic, section name, and section topic carefully.
-2. If present, review any existing section content. 
-3. Then, look at the provided Source material.
-4. Decide the sources that you will use to write a report section.
-5. Write the report section and list your sources. 
+1. Review the blog topic, the section name, and the section description carefully.
+2. If present, check any existing content for this section.
+3. Examine the provided Source material to support your writing.
+4. Write this section's content according to the required guidelines (tables, lists, etc. if needed).
+5. Conclude with a ### Sources list referencing the chosen URLs.
 </Task>
 
 <Writing Guidelines>
-- If existing section content is not populated, write from scratch.
-- If existing section content is populated, synthesize it with the source material.
-- Strict 150-200 word limit.
-- Use simple, clear language.
-- Use short paragraphs (2-3 sentences max).
-- Use ## for section title (Markdown format).
-- Ensure that the section title and content are unique and do not duplicate other sections (for example, avoid repeating the report title or creating multiple "Conclusion" sections).
+- This blog is structured in 5 major steps with 6 table-of-contents items in Steps 2 and 3.
+- Each main section (TOC item) must have at least 200 characters.
+- Use simple, clear language and short paragraphs.
+- For the section title, use Markdown format (e.g., "## Section 1").
+- If this is a special section requiring a table or list, ensure you incorporate it properly in Markdown.
+- Do NOT create a new concluding statement for the entire blog. The blog's final finishing statement occurs in Step 5.
 </Writing Guidelines>
 
 <Citation Rules>
 - Assign each unique URL a single citation number in your text.
-- End with ### Sources that lists each source with corresponding numbers.
-- IMPORTANT: Number sources sequentially without gaps (1,2,3,4...) in the final list regardless of which sources you choose.
+- End the section with ### Sources, listing each source with the corresponding number.
+- Number sources sequentially without gaps (1,2,3,4...) in the final list.
 - Example format:
   [1] Source Title: URL
   [2] Source Title: URL
 </Citation Rules>
 
 <Final Check>
-1. Verify that EVERY claim is grounded in the provided Source material.
-2. Confirm each URL appears ONLY ONCE in the Source list.
-3. Verify that sources are numbered sequentially (1,2,3...) without any gaps.
+1. Verify every claim is grounded in the provided sources.
+2. Confirm each URL appears ONLY ONCE in the Sources list.
+3. No overlapping or duplicate final statements (the overall blog conclusion is Step 5).
 </Final Check>
 """
-
-section_writer_inputs = """ 
+section_writer_inputs = """Answer in Korean.  
 <Report topic>
 {topic}
 </Report topic>
@@ -156,7 +173,8 @@ section_writer_inputs = """
 </Source material>
 """
 
-section_grader_instructions = """Review a report section relative to the specified topic:
+
+section_grader_instructions = """Answer in Korean. Review a blog post section relative to the specified topic:
 
 <Report topic>
 {topic}
@@ -171,9 +189,13 @@ section_grader_instructions = """Review a report section relative to the specifi
 </section content>
 
 <task>
-Evaluate whether the section content adequately addresses the section topic without duplicating content from other sections (e.g., avoid duplicate conclusions or repeated report titles).
+Check whether this section meets the blog's 5-step structure requirements:
+- If this section belongs to Steps 2 or 3, ensure at least 200 characters.
+- If it's the second or fifth section, confirm a table is included.
+- If it's the third or sixth section, confirm a list is included.
+- Ensure no duplication of the entire blog's conclusion.
 
-If the section content does not adequately address the section topic, generate {number_of_follow_up_queries} follow-up search queries to gather missing information.
+If the content is lacking information, generate {number_of_follow_up_queries} follow-up web search queries.
 </task>
 
 <format>
@@ -181,12 +203,13 @@ If the section content does not adequately address the section topic, generate {
         description="Evaluation result indicating whether the response meets requirements ('pass') or needs revision ('fail')."
     )
     follow_up_queries: List[SearchQuery] = Field(
-        description="List of follow-up search queries.",
+        description="List of follow-up search queries to address missing details.",
     )
 </format>
 """
 
-final_section_writer_instructions = """You are an expert technical writer crafting a section that synthesizes information from the rest of the report.
+
+final_section_writer_instructions = """Answer in Korean.You are an expert technical writer completing the final parts of a 5-step blog post.
 
 <Report topic>
 {topic}
@@ -205,45 +228,27 @@ final_section_writer_instructions = """You are an expert technical writer crafti
 </Available report content>
 
 <Task>
-1. Section-Specific Approach:
+This blog follows 5 steps. You are now writing either:
+1. The FAQ (Step 4), or
+2. The final finishing statement (Step 5).
 
-For Introduction:
-- Use # for report title (Markdown format).
-- 50-100 word limit.
-- Write in simple and clear language.
-- Focus on the core motivation for the report in 1-2 paragraphs.
-- Use a clear narrative arc to introduce the report.
-- Include NO structural elements (no lists or tables).
-- No sources section needed.
+For the FAQ (Step 4):
+- Provide exactly 6 Q&A pairs.
+- Use HTML to visually emphasize each question and answer (e.g., <h3>Q1</h3><p>A1</p>).
+- Keep answers concise yet informative.
 
-For Conclusion/Summary:
-- Use ## for section title (Markdown format).
-- 100-150 word limit.
-- For comparative reports:
-    * Must include a focused comparison table using Markdown table syntax.
-    * Table should distill insights from the report.
-    * Keep table entries clear and concise.
-- For non-comparative reports: 
-    * Only use ONE structural element IF it helps distill the points made in the report:
-    * Either a focused table comparing items present in the report (using Markdown table syntax)
-    * Or a short list using proper Markdown list syntax:
-      - Use `*` or `-` for unordered lists.
-      - Use `1.` for ordered lists.
-      - Ensure proper indentation and spacing.
-- End with specific next steps or implications.
-- No sources section needed.
-- Ensure that this section is unique in its role and does not duplicate any previously defined conclusion or summary sections.
+For the finishing statement (Step 5):
+- Write a final remark wrapping up the blog post (100-150 words).
+- You may also include a brief CTA (e.g., "Thank you for reading! Check out more posts on ...").
+- If relevant, you may add a short list of tags (up to 10) as #TagName at the very end. 
+- Do NOT add any sources section here.
 
-3. Writing Approach:
-- Use concrete details over general statements.
-- Make every word count.
-- Focus on your single most important point.
+Ensure you do not create overlapping or duplicate concluding sections.
 </Task>
 
 <Quality Checks>
-- For introduction: 50-100 word limit, # for report title, no structural elements, no sources section.
-- For conclusion: 100-150 word limit, ## for section title, only ONE structural element at most, no sources section.
-- Markdown format.
-- Do not include word count or any preamble in your response.
+- For FAQ: Exactly 6 Q&As, each highlighted with HTML tags.
+- For finishing statement: 100-150 words, optional CTA, optional tags (#tag1 #tag2 ...).
+- No new tables/lists beyond these guidelines.
 </Quality Checks>
 """

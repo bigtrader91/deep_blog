@@ -1,81 +1,49 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<svg baseProfile="full" height="100%" preserveAspectRatio="xMidYMid meet" version="1.1" viewBox="0 0 800 800" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="bg-blur-filter"><feGaussianBlur in="SourceGraphic" stdDeviation="1.1183354576253124" /></filter></defs><style type="text/css"><![CDATA[
-        .diagram-main-title {
-            font-family: Arial, sans-serif;
+<svg baseProfile="full" height="100%" preserveAspectRatio="xMidYMid meet" version="1.1" viewBox="0 0 800 800" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><linearGradient id="image_overlay" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#000000" stop-opacity="0.0" /><stop offset="100%" stop-color="#000000" stop-opacity="0.11851319270310633" /></linearGradient></defs><style type="text/css"><![CDATA[
+        svg {
+            max-width: 100%;
+            height: auto; /* CSS에서는 auto 사용 가능 */
+            display: block; /* 불필요한 여백 방지 */
+        }
+        
+        .image-diagram-title {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
             font-weight: bold;
-            font-size: 42px; /* 메인 타이틀용 기본 크기 */
+            font-size: 48px;
         }
-
-        .diagram-card-title {
-            font-family: Arial, sans-serif;
+        
+        .image-diagram-section-title {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
             font-weight: bold;
-            font-size: 32px; /* 카드 제목용 기본 크기 */
+            font-size: 32px;
         }
-
-        .card-content {
-            font-family: Arial, sans-serif;
-            font-size: 24px; /* 카드 내용용 기본 크기 */
+        
+        .image-diagram-content {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            font-size: 24px;
         }
+        
+        @media screen and (max-width: 800px) {
+            .image-diagram-title { font-size: 42px; }
+            .image-diagram-section-title { font-size: 28px; }
+            .image-diagram-content { font-size: 22px; }
+            .diagram-text { font-size: 14px; }
+            .diagram-title { font-size: 22px; }
+        }
+        
         @media screen and (max-width: 600px) {
+            .image-diagram-title { font-size: 36px; }
+            .image-diagram-section-title { font-size: 24px; }
+            .image-diagram-content { font-size: 20px; }
             .diagram-text { font-size: 12px; }
             .diagram-title { font-size: 20px; }
-            .card-content { font-size: 11px; }
         }
+        
         @media screen and (max-width: 400px) {
+            .image-diagram-title { font-size: 30px; }
+            .image-diagram-section-title { font-size: 20px; }
+            .image-diagram-content { font-size: 18px; }
             .diagram-text { font-size: 10px; }
             .diagram-title { font-size: 18px; }
-            .card-content { font-size: 9px; }
         }
-    ]]></style><script type="text/javascript"><![CDATA[
-        (function() {
-            // SVG 요소 참조
-            var svg = document.currentScript.parentNode;
-            
-            // 반응형 크기 조절 함수
-            function resizeSVG() {
-                var container = svg.parentNode;
-                if (container) {
-                    var containerWidth = container.clientWidth;
-                    if (containerWidth > 0) {
-                        // 컨테이너 너비에 맞게 SVG 크기 조절
-                        svg.setAttribute('width', containerWidth);
-                        var viewBox = svg.getAttribute('viewBox').split(' ');
-                        var aspectRatio = viewBox[2] / viewBox[3];
-                        svg.setAttribute('height', containerWidth / aspectRatio);
-                        
-                        // 화면 크기에 따른 폰트 크기 조절
-                        var scale = containerWidth < 400 ? 0.7 : 
-                                  containerWidth < 600 ? 0.8 : 1;
-                        
-                        // 텍스트 요소들의 폰트 크기 고정 비율로 조절
-                        var texts = svg.getElementsByClassName('diagram-text');
-                        for (var i = 0; i < texts.length; i++) {
-                            // 기본 클래스별 크기 사용
-                            var baseSize = 16; // diagram-text 기본 크기
-                            texts[i].setAttribute('font-size', (baseSize * scale) + 'px');
-                        }
-                        
-                        var titles = svg.getElementsByClassName('diagram-title');
-                        for (var i = 0; i < titles.length; i++) {
-                            var baseSize = 24; // diagram-title 기본 크기
-                            titles[i].setAttribute('font-size', (baseSize * scale) + 'px');
-                        }
-                        
-                        var cardTexts = svg.getElementsByClassName('card-content');
-                        for (var i = 0; i < cardTexts.length; i++) {
-                            var baseSize = 14; // card-content 기본 크기
-                            cardTexts[i].setAttribute('font-size', (baseSize * scale) + 'px');
-                        }
-                    }
-                }
-            }
-            
-            // 초기 로드 및 창 크기 변경 시 크기 조절
-            window.addEventListener('resize', resizeSVG);
-            if (document.readyState === 'complete') {
-                resizeSVG();
-            } else {
-                window.addEventListener('load', resizeSVG);
-            }
-        })();
-    ]]></script><rect fill="#111111" height="800" width="800" x="0" y="0" /><g filter="url(#bg-blur-filter)" opacity="0.2"><image height="800" width="800" x="0" xlink:href="https://pixabay.com/get/g4db0f96d0d33a563a35e49daf56628cec267782e98b94fba946085b73fddf395fba0485e68f63555c2c60f7c624651ad7398ca0f5234cfe4e2e9b7325eb3ea66_1280.jpg" y="0" /><rect fill="#111111" height="800" opacity="0.5610563633659027" width="800" x="0" y="0" /></g><rect fill="#111111" height="120" opacity="0.5" width="800" x="0" y="10" /><text class="diagram-main-title" dominant-baseline="middle" fill="#FFFFFF" font-family="Arial" font-size="160px" font-weight="bold" text-anchor="middle" x="400.0" y="60">여행과 건강한 라이프스타일</text><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="118" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="115" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="160">대리만족의 즐거움</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="190.0">노홍철 님의 유튜브를 통해 여행의 대리만족을 느끼며</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="218.8">즐거움을 찾고 있습니다.</text></g><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="246" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="243" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="288">다이어트 효과</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="318.0">린 다이어트를 통해 볼살이 줄어들고 옷태가 개선되는 변화를</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="346.8">경험하고 있습니다.</text></g><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="374" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="371" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="416">광고 모델 발탁</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="446.0">노홍철 님이 린 다이어트의 광고 모델로 발탁되어 더욱</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="474.8">관심이 집중되고 있습니다.</text></g></svg>
+    ]]></style><rect fill="#111111" height="100%" width="100%" x="0" y="0" /><image height="320" preserveAspectRatio="xMidYMid slice" width="800" x="0" xlink:href="https://pixabay.com/get/g3e6c95c54dd61ff6b7fad5d746cf0f5a0be6ba5ec717a73ed5bc530078d49e865c8dacd6a0b6a49b0d35ece9a7c3a40065bc558362d363888d0bca9e0bcdc4b8_1280.jpg" y="0" /><rect fill="url(#image_overlay)" height="320" width="800" x="0" y="0" /><text class="image-diagram-title" fill="#FFFFFF" font-family="'Noto Sans KR', Arial, sans-serif" font-size="48px" font-weight="bold" text-anchor="middle" x="400.0" y="390">Impact of Poor Joint Health</text><circle cx="40" cy="465" fill="#4A9B8C" r="15" /><text fill="white" font-family="'Noto Sans KR', Arial, sans-serif" font-size="20px" font-weight="bold" text-anchor="middle" x="40" y="471">1</text><text class="image-diagram-section-title" fill="#FFFFFF" font-family="'Noto Sans KR', Arial, sans-serif" font-size="32px" font-weight="bold" x="80" y="482">Effects on Daily Life</text><g><text class="image-diagram-content" fill="#EEEEEE" font-family="'Noto Sans KR', Arial, sans-serif" font-size="24px" font-weight="normal" text-anchor="start" x="80" y="512.0">Poor joint health leads to pain</text><text class="image-diagram-content" fill="#EEEEEE" font-family="'Noto Sans KR', Arial, sans-serif" font-size="24px" font-weight="normal" text-anchor="start" x="80" y="548.0">and stiffness, affecting mobility</text><text class="image-diagram-content" fill="#EEEEEE" font-family="'Noto Sans KR', Arial, sans-serif" font-size="24px" font-weight="normal" text-anchor="start" x="80" y="584.0">and daily activities.</text></g><circle cx="40" cy="673.0" fill="#4A9B8C" r="15" /><text fill="white" font-family="'Noto Sans KR', Arial, sans-serif" font-size="20px" font-weight="bold" text-anchor="middle" x="40" y="679.0">2</text><text class="image-diagram-section-title" fill="#FFFFFF" font-family="'Noto Sans KR', Arial, sans-serif" font-size="32px" font-weight="bold" x="80" y="690.0">Osteoarthritis Complications</text><g><text class="image-diagram-content" fill="#EEEEEE" font-family="'Noto Sans KR', Arial, sans-serif" font-size="24px" font-weight="normal" text-anchor="start" x="80" y="720.0">Conditions like osteoarthritis</text><text class="image-diagram-content" fill="#EEEEEE" font-family="'Noto Sans KR', Arial, sans-serif" font-size="24px" font-weight="normal" text-anchor="start" x="80" y="756.0">worsen joint issues, increasing</text><text class="image-diagram-content" fill="#EEEEEE" font-family="'Noto Sans KR', Arial, sans-serif" font-size="24px" font-weight="normal" text-anchor="start" x="80" y="792.0">discomfort and limiting movement.</text></g></svg>

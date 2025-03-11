@@ -4,7 +4,7 @@
 SVG 다이어그램의 반응형 기능을 제공하는 유틸리티 모듈
 
 이 모듈은 SVG 다이어그램이 다양한 디바이스와 화면 크기에서 
-적절하게 표시되도록 하는 반응형 스크립트 및 스타일을 제공합니다.
+적절하게 표시되도록 하는 반응형 스타일을 제공합니다.
 """
 import re
 from typing import Tuple, Dict, List, Optional
@@ -12,9 +12,10 @@ from typing import Tuple, Dict, List, Optional
 
 def add_responsive_script(dwg: 'svgwrite.Drawing') -> None:
     """
-    SVG에 반응형 동작을 위한 스크립트와 스타일을 추가합니다.
+    SVG에 반응형 동작을 위한 CSS 스타일을 추가합니다.
     
-    이 함수는 SVG가 다양한 화면 크기와 기기에서 적절하게 표시되도록 합니다.
+    이 함수는 SVG가 다양한 화면 크기와 기기에서 적절하게 표시되도록 CSS를 활용합니다.
+    JavaScript 대신 CSS와 SVG 속성을 사용하여 반응형 기능을 제공합니다.
     
     Args:
         dwg: SVG 드로잉 객체
@@ -24,92 +25,84 @@ def add_responsive_script(dwg: 'svgwrite.Drawing') -> None:
     dwg.attribs['xmlns'] = 'http://www.w3.org/2000/svg'
     dwg.attribs['xmlns:xlink'] = 'http://www.w3.org/1999/xlink'
     
-    # 스타일 추가 방식 변경 - 객체 생성 없이 직접 추가
+    # SVG 크기가 명시적으로 설정되지 않은 경우 viewBox 확인 및 설정
+    if 'viewBox' not in dwg.attribs:
+        # 기본 크기 정보 가져오기
+        size = dwg.attribs.get('size', '800 800').split()
+        width = size[0] if len(size) > 0 else 800
+        height = size[1] if len(size) > 1 else width
+        dwg.attribs['viewBox'] = f"0 0 {width} {height}"
+    
+    # SVG를 100% 크기로 설정하여 컨테이너에 맞추도록 함
+    dwg.attribs['width'] = '100%'
+    # height를 'auto'가 아닌 '100%'로 설정 (SVG 속성은 'auto'를 허용하지 않음)
+    dwg.attribs['height'] = '100%'
+    
+    # 향상된 CSS로 반응형 스타일 추가
     style = dwg.style("""
+        :root {
+            --base-font-size: 16px;
+        }
+        
+        svg {
+            max-width: 100%;
+            height: auto; /* CSS에서는 auto 사용 가능 */
+            display: block; /* 불필요한 여백 방지 */
+        }
+        
         .diagram-main-title {
             font-family: Arial, sans-serif;
             font-weight: bold;
-            font-size: 42px; /* 메인 타이틀용 기본 크기 */
+            font-size: 42px;
         }
 
         .diagram-card-title {
             font-family: Arial, sans-serif;
             font-weight: bold;
-            font-size: 32px; /* 카드 제목용 기본 크기 */
+            font-size: 32px;
         }
 
         .card-content {
             font-family: Arial, sans-serif;
-            font-size: 24px; /* 카드 내용용 기본 크기 */
+            font-size: 24px;
         }
+        
+        .diagram-text {
+            font-size: 16px;
+        }
+        
+        .diagram-title {
+            font-size: 24px;
+        }
+        
+        /* 반응형 폰트 크기 */
+        @media screen and (max-width: 800px) {
+            .diagram-main-title { font-size: 36px; }
+            .diagram-card-title { font-size: 28px; }
+            .diagram-text { font-size: 14px; }
+            .diagram-title { font-size: 22px; }
+            .card-content { font-size: 20px; }
+        }
+        
         @media screen and (max-width: 600px) {
+            .diagram-main-title { font-size: 30px; }
+            .diagram-card-title { font-size: 24px; }
             .diagram-text { font-size: 12px; }
             .diagram-title { font-size: 20px; }
-            .card-content { font-size: 11px; }
+            .card-content { font-size: 16px; }
         }
+        
         @media screen and (max-width: 400px) {
+            .diagram-main-title { font-size: 24px; }
+            .diagram-card-title { font-size: 20px; }
             .diagram-text { font-size: 10px; }
             .diagram-title { font-size: 18px; }
-            .card-content { font-size: 9px; }
+            .card-content { font-size: 14px; }
         }
     """)
     dwg.add(style)
     
-    # 스크립트 요소 추가 (SVG 크기 자동 조절)
-    script = dwg.script(content="""
-        (function() {
-            // SVG 요소 참조
-            var svg = document.currentScript.parentNode;
-            
-            // 반응형 크기 조절 함수
-            function resizeSVG() {
-                var container = svg.parentNode;
-                if (container) {
-                    var containerWidth = container.clientWidth;
-                    if (containerWidth > 0) {
-                        // 컨테이너 너비에 맞게 SVG 크기 조절
-                        svg.setAttribute('width', containerWidth);
-                        var viewBox = svg.getAttribute('viewBox').split(' ');
-                        var aspectRatio = viewBox[2] / viewBox[3];
-                        svg.setAttribute('height', containerWidth / aspectRatio);
-                        
-                        // 화면 크기에 따른 폰트 크기 조절
-                        var scale = containerWidth < 400 ? 0.7 : 
-                                  containerWidth < 600 ? 0.8 : 1;
-                        
-                        // 텍스트 요소들의 폰트 크기 고정 비율로 조절
-                        var texts = svg.getElementsByClassName('diagram-text');
-                        for (var i = 0; i < texts.length; i++) {
-                            // 기본 클래스별 크기 사용
-                            var baseSize = 16; // diagram-text 기본 크기
-                            texts[i].setAttribute('font-size', (baseSize * scale) + 'px');
-                        }
-                        
-                        var titles = svg.getElementsByClassName('diagram-title');
-                        for (var i = 0; i < titles.length; i++) {
-                            var baseSize = 24; // diagram-title 기본 크기
-                            titles[i].setAttribute('font-size', (baseSize * scale) + 'px');
-                        }
-                        
-                        var cardTexts = svg.getElementsByClassName('card-content');
-                        for (var i = 0; i < cardTexts.length; i++) {
-                            var baseSize = 14; // card-content 기본 크기
-                            cardTexts[i].setAttribute('font-size', (baseSize * scale) + 'px');
-                        }
-                    }
-                }
-            }
-            
-            // 초기 로드 및 창 크기 변경 시 크기 조절
-            window.addEventListener('resize', resizeSVG);
-            if (document.readyState === 'complete') {
-                resizeSVG();
-            } else {
-                window.addEventListener('load', resizeSVG);
-            }
-        })();
-    """, type="text/javascript")
-    dwg.add(script)
+    # JavaScript 사용하지 않음 - CSS와 SVG의 기본 속성만 활용
 
 
 def create_simple_svg_fallback(output_file: str, error_message: str, main_title: str = "오류 발생") -> str:
@@ -151,6 +144,7 @@ def wrap_text(
 ) -> List[str]:
     """
     텍스트를 주어진 너비에 맞게 줄바꿈합니다.
+    CSS 기반 반응형에서도 적절하게 작동하도록 개선됨.
     
     Args:
         text: 줄바꿈할 텍스트
@@ -162,11 +156,30 @@ def wrap_text(
     Returns:
         List[str]: 줄바꿈된 텍스트 라인 목록
     """
-    # 다이어그램 타입에 따른 계수 설정
-    width_factor = 0.8 if diagram_type == 'card' else 0.38
+    # 다이어그램 타입에 따른 기본 계수 설정
+    base_width_factor = 0.25 if diagram_type == 'card' else 0.25
     
-    # 대략적인 문자 수 계산 (폰트 크기와 다이어그램 타입에 따라 조정)
-    chars_per_line = int(width / (font_size * width_factor))
+    # 화면 크기에 따른 조정 계수 시뮬레이션 (CSS의 미디어 쿼리와 유사한 효과)
+    # 이 부분은 SVG 생성 시점에 화면 크기를 알 수 없기 때문에 가정에 기반함
+    if width <= 400:
+        # 모바일 화면용 (작은 화면에서는 더 짧은 줄로 분리)
+        width_factor = base_width_factor * 1.2
+    elif width <= 600:
+        # 태블릿 화면용
+        width_factor = base_width_factor * 1.1
+    else:
+        # 데스크톱 화면용
+        width_factor = base_width_factor
+    
+    # 더 정확한 줄바꿈을 위해 폰트 크기 고려
+    # 폰트 크기가 작을수록 한 줄에 더 많은 글자가 들어감
+    font_adjust = 16 / max(font_size, 1)  # 기준 폰트 사이즈가 16일 때
+    
+    # 최종 문자 수 계산 (폰트 크기와 다이어그램 타입에 따라 조정)
+    chars_per_line = int(width / (font_size * width_factor) * font_adjust)
+    
+    # 최소값 보장 (너무 짧은 줄은 방지)
+    chars_per_line = max(chars_per_line, 15)
     
     # 텍스트 줄바꿈
     import textwrap
@@ -177,6 +190,6 @@ def wrap_text(
         lines = lines[:max_lines-1]
         # 생략 표시 추가
         if lines:
-            lines.append(lines[-1] + "...")
+            lines[-1] = lines[-1].rstrip() + "..."
     
     return lines 

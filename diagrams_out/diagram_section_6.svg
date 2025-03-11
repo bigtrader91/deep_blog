@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg baseProfile="full" height="100%" preserveAspectRatio="xMidYMid meet" version="1.1" viewBox="0 0 500 500" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs /><style type="text/css"><![CDATA[
+        :root {
+            --base-font-size: 16px;
+        }
+        
+        svg {
+            max-width: 100%;
+            height: auto; /* CSS에서는 auto 사용 가능 */
+            display: block; /* 불필요한 여백 방지 */
+        }
+        
+        .diagram-main-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 42px;
+        }
+
+        .diagram-card-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 32px;
+        }
+
+        .card-content {
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+        }
+        
+        .diagram-text {
+            font-size: 16px;
+        }
+        
+        .diagram-title {
+            font-size: 24px;
+        }
+        
+        /* 반응형 폰트 크기 */
+        @media screen and (max-width: 800px) {
+            .diagram-main-title { font-size: 36px; }
+            .diagram-card-title { font-size: 28px; }
+            .diagram-text { font-size: 14px; }
+            .diagram-title { font-size: 22px; }
+            .card-content { font-size: 20px; }
+        }
+        
+        @media screen and (max-width: 600px) {
+            .diagram-main-title { font-size: 30px; }
+            .diagram-card-title { font-size: 24px; }
+            .diagram-text { font-size: 12px; }
+            .diagram-title { font-size: 20px; }
+            .card-content { font-size: 16px; }
+        }
+        
+        @media screen and (max-width: 400px) {
+            .diagram-main-title { font-size: 24px; }
+            .diagram-card-title { font-size: 20px; }
+            .diagram-text { font-size: 10px; }
+            .diagram-title { font-size: 18px; }
+            .card-content { font-size: 14px; }
+        }
+    ]]></style><rect fill="#0f0f0f" height="500" width="500" x="0" y="0" /><rect fill="#0f0f0f" height="120" opacity="0.5" width="500" x="0" y="10" /><text class="diagram-main-title" dominant-baseline="middle" fill="#FFFFFF" font-family="Arial" font-size="100px" font-weight="bold" text-anchor="middle" x="250.0" y="60">Importance of Joint Health</text><rect fill="#000000" height="150" opacity="0.3" rx="10" ry="10" width="425.0" x="40.5" y="118" /><g><rect fill="#FEEBDC" height="150" opacity="0.95" rx="10" ry="10" width="425.0" x="37.5" y="115" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="65px" font-weight="bold" text-anchor="start" x="62.5" y="160">Key Ingredients in Supplements</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="190.0">Glucosamine, Chondroitin, and</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="208.0">MSM are essential for joint</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="226.0">function and pain relief.</text></g><rect fill="#000000" height="180" opacity="0.3" rx="10" ry="10" width="425.0" x="40.5" y="276" /><g><rect fill="#FEEBDC" height="180" opacity="0.95" rx="10" ry="10" width="425.0" x="37.5" y="273" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="65px" font-weight="bold" text-anchor="start" x="62.5" y="318">Research Insights</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="348.0">Recent studies show mixed</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="366.0">results on the effectiveness of</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="384.0">joint supplements compared to</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="402.0">placebos.</text></g><rect fill="#000000" height="150" opacity="0.3" rx="10" ry="10" width="425.0" x="40.5" y="464" /><g><rect fill="#FEEBDC" height="150" opacity="0.95" rx="10" ry="10" width="425.0" x="37.5" y="461" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="65px" font-weight="bold" text-anchor="start" x="62.5" y="506">Consulting Healthcare Professionals</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="536.0">It's vital to seek professional</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="554.0">advice for safe and effective</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="572.0">use of joint supplements.</text></g><rect fill="#000000" height="150" opacity="0.3" rx="10" ry="10" width="425.0" x="40.5" y="622" /><g><rect fill="#FEEBDC" height="150" opacity="0.95" rx="10" ry="10" width="425.0" x="37.5" y="619" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="65px" font-weight="bold" text-anchor="start" x="62.5" y="664">Prioritizing Joint Health</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="694.0">Informed choices can enhance</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="712.0">mobility and improve overall</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="15px" font-weight="normal" text-anchor="start" x="62.5" y="730.0">quality of life.</text></g></svg>
