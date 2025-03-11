@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# src.generator.svg.image_diagram.py
 """
 이미지-텍스트 레이아웃 형태의 SVG 다이어그램 생성기
 
@@ -12,51 +11,113 @@ import re
 import svgwrite
 import requests
 import textwrap
+import logging
 from urllib.parse import quote
 from svgwrite.container import Group
 from svgwrite.text import Text
+import random
 
+# responsive_utils.py에 정의된 함수들을 그대로 사용한다고 가정
 from .responsive_utils import add_responsive_script, wrap_text
 
-def get_pixabay_image(query: str, api_key: str, width: int = 800, height: int = 400) -> Optional[str]:
-    """
-    픽사베이 API를 사용하여 이미지를 검색하고 URL을 반환합니다.
-    
-    Args:
-        query: 검색어
-        api_key: 픽사베이 API 키
-        width: 요청할 이미지 너비
-        height: 요청할 이미지 높이
-        
-    Returns:
-        Optional[str]: 이미지 URL 또는 실패 시 None
-    """
-    try:
-        # URL 인코딩
-        encoded_query = quote(query)
-        url = f"https://pixabay.com/api/?key={api_key}&q={encoded_query}&image_type=photo&orientation=horizontal&per_page=3"
-        
-        response = requests.get(url)
-        data = response.json()
-        
-        if data['totalHits'] > 0:
-            # 첫 번째 이미지 URL 반환
-            return data['hits'][0]['largeImageURL']
-        else:
-            return None
-    except Exception as e:
-        print(f"픽사베이 API 오류: {str(e)}")
-        return None
+# 공통 유틸 함수 (픽사베이 이미지 검색 등)
+from .common_utils import (
+    get_pixabay_image,
+    get_keywords_from_sections,
+    validate_image_url
+)
+
+# 로깅 설정
+logger = logging.getLogger(__name__)
+
 
 def add_responsive_attributes(dwg: svgwrite.Drawing) -> None:
     """
-    SVG에 반응형 속성을 추가합니다.
+    SVG 드로잉 객체에 반응형 속성과 스타일을 추가합니다.
     
     Args:
         dwg: SVG 드로잉 객체
     """
-    # 향상된 반응형 스크립트 추가
-    add_responsive_script(dwg)
+    # 기본 SVG 속성 설정
+    dwg.attribs['preserveAspectRatio'] = 'xMidYMid meet'
+    dwg.attribs['xmlns'] = 'http://www.w3.org/2000/svg'
+    dwg.attribs['xmlns:xlink'] = 'http://www.w3.org/1999/xlink'
+    
+    # 이미지 다이어그램 전용 스타일 추가
+    style = dwg.style("""
+        .image-diagram-title {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            font-weight: bold;
+            font-size: 48px; /* 메인 타이틀용 기본 크기 증가 */
+        }
+        .image-diagram-section-title {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            font-weight: bold;
+            font-size: 32px; /* 섹션 제목용 기본 크기 증가 */
+        }
+        .image-diagram-content {
+            font-family: 'Noto Sans KR', Arial, sans-serif;
+            font-size: 24px; /* 섹션 내용용 기본 크기 증가 */
+        }
+        @media screen and (max-width: 600px) {
+            .image-diagram-title { font-size: 36px; }
+            .image-diagram-section-title { font-size: 28px; }
+            .image-diagram-content { font-size: 20px; }
+        }
+        @media screen and (max-width: 400px) {
+            .image-diagram-title { font-size: 32px; }
+            .image-diagram-section-title { font-size: 24px; }
+            .image-diagram-content { font-size: 18px; }
+        }
+    """)
+    dwg.add(style)
+    
+    # 반응형 크기 조절 스크립트 추가
+    script = dwg.script(content="""
+        (function() {
+            var svg = document.currentScript.parentNode;
+            
+            function resizeImageDiagram() {
+                var container = svg.parentNode;
+                if (!container) return;
+                
+                var containerWidth = container.clientWidth;
+                if (containerWidth <= 0) return;
+                
+                // SVG 크기를 컨테이너에 맞게 조절 (1:1 비율 유지)
+                svg.setAttribute('width', containerWidth);
+                svg.setAttribute('height', containerWidth);
+                
+                // 화면 크기에 따른 스케일 계산
+                var scale = containerWidth < 400 ? 0.7 : 
+                           containerWidth < 600 ? 0.85 : 1;
+                
+                // 폰트 크기 동적 조절
+                var titles = svg.getElementsByClassName('image-diagram-title');
+                var sectionTitles = svg.getElementsByClassName('image-diagram-section-title');
+                var contents = svg.getElementsByClassName('image-diagram-content');
+                
+                function adjustFontSize(elements, baseSize) {
+                    for (var i = 0; i < elements.length; i++) {
+                        elements[i].style.fontSize = (baseSize * scale) + 'px';
+                    }
+                }
+                
+                adjustFontSize(titles, 48);
+                adjustFontSize(sectionTitles, 32);
+                adjustFontSize(contents, 24);
+            }
+            
+            window.addEventListener('resize', resizeImageDiagram);
+            if (document.readyState === 'complete') {
+                resizeImageDiagram();
+            } else {
+                window.addEventListener('load', resizeImageDiagram);
+            }
+        })();
+    """, type="text/javascript")
+    dwg.add(script)
+
 
 def create_wrapped_text(
     dwg: svgwrite.Drawing, 
@@ -90,25 +151,17 @@ def create_wrapped_text(
         css_class: CSS 클래스 이름
         
     Returns:
-        Tuple[Group, float]: 텍스트 그룹과 총 높이
+        Tuple[Group, float]: (텍스트 그룹, 총 높이)
     """
-    # 폰트 크기에서 숫자만 추출
     font_size_num = int(re.search(r'\d+', font_size).group())
-    
-    # 향상된 wrap_text 함수를 사용
-    lines = wrap_text(text, width, font_size_num)
-    
-    # 줄 높이 계산
+    lines = wrap_text(text, width, font_size_num, diagram_type='image')
     line_spacing = font_size_num * line_height
     
-    # 텍스트 그룹 생성
     text_group = Group()
-    
-    # 각 줄을 개별 텍스트 요소로 추가
-    for i, line in enumerate(lines):
+    for i, line_str in enumerate(lines):
         line_y = y + (i * line_spacing)
         text_element = Text(
-            line, 
+            line_str,
             insert=(x, line_y),
             text_anchor=text_anchor,
             font_family=font_family,
@@ -119,176 +172,177 @@ def create_wrapped_text(
         text_element.attribs['class'] = css_class
         text_group.add(text_element)
     
-    # 총 높이 계산 (마지막 줄 포함)
     total_height = len(lines) * line_spacing if lines else 0
-    
     return text_group, total_height
-    
+
+
 def generate_split_layout(
     title: str,
-    descriptions: List[Dict[str, str]],
+    descriptions: List[Dict[str, Any]],
     output_file: str,
     header_image: Optional[str] = None,
     pixabay_query: Optional[str] = None,
     pixabay_api_key: Optional[str] = None,
     width: int = 800,
-    height: int = 1000,
+    height: int = 800,
     background_color: str = "#FFFFFF",
     title_color: str = "#333333",
     description_color: str = "#555555",
-    number_color: str = "#FFFFFF",
-    number_bg_color: str = "#4A90E2",
     add_responsive: bool = True
 ) -> str:
     """
-    40:60 비율로 이미지와 텍스트를 배치한 SVG 다이어그램을 생성합니다.
-    
-    Args:
-        title: 메인 제목
-        descriptions: 설명 리스트 (각 항목은 {'number': '숫자', 'title': '제목', 'description': '설명'} 형태)
-        output_file: 출력 SVG 파일 경로
-        header_image: 상단 이미지 경로 (선택 사항)
-        pixabay_query: 픽사베이 이미지 검색어 (선택 사항)
-        pixabay_api_key: 픽사베이 API 키 (선택 사항)
-        width: SVG 너비 (기본값: 800px)
-        height: SVG 높이 (기본값: 1000px)
-        background_color: 배경색 (기본값: 흰색)
-        title_color: 제목 색상 (기본값: 진한 회색)
-        description_color: 설명 텍스트 색상 (기본값: 회색)
-        number_color: 번호 텍스트 색상 (기본값: 흰색)
-        number_bg_color: 번호 배경 색상 (기본값: 파란색)
-        add_responsive: 반응형 속성 추가 여부 (기본값: True)
-        
-    Returns:
-        str: 생성된 SVG 파일 경로
+    이미지와 텍스트를 결합한 SVG 다이어그램을 생성합니다.
+    상단 40%는 이미지, 하단 60%는 텍스트로 구성됩니다.
+    1-2개의 섹션에 최적화되어 있습니다.
     """
-    # 이미지 영역 높이 계산 (전체 높이의 40%)
-    image_height = int(height * 0.4)
+    if len(descriptions) > 2:
+        logger.warning("이미지 다이어그램은 1-2개의 섹션에 최적화되어 있습니다.")
     
-    # 텍스트 영역 시작 위치 및 높이
-    text_area_y = image_height
-    text_area_height = height - image_height
+    # 테마 선택 (랜덤)
+    is_dark_theme = random.choice([True, False])
+    if is_dark_theme:
+        background_color = "#111111"
+        title_color = "#FFFFFF"
+        description_color = "#EEEEEE"
+    else:
+        background_color = "#FFFFFF"
+        title_color = "#333333"
+        description_color = "#555555"
     
-    # SVG 캔버스 생성
-    dwg = svgwrite.Drawing(output_file, profile='full', size=(f"{width}px", f"{height}px"))
+    dwg = svgwrite.Drawing(output_file, size=(width, width))
+    dwg.attribs['viewBox'] = f"0 0 {width} {width}"
     
-    # 반응형 속성 추가
     if add_responsive:
         add_responsive_attributes(dwg)
     
-    # viewBox 설정
-    dwg.attribs['viewBox'] = f"0 0 {width} {height}"
+    dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill=background_color))
     
-    # 배경 추가
-    dwg.add(dwg.rect(insert=(0, 0), size=(width, height), fill=background_color))
+    # 상단 이미지 영역 (40%)
+    image_height = int(width * 0.4)
+    if not header_image and pixabay_api_key and pixabay_query:
+        all_keywords = []
+        for desc in descriptions:
+            if 'keywords' in desc and isinstance(desc['keywords'], list):
+                all_keywords.extend(desc['keywords'][:2])
+        search_query = pixabay_query
+        if all_keywords:
+            unique_keywords = list(set(all_keywords))[:2]
+            search_query = f"{pixabay_query}, {', '.join(unique_keywords)}"
+            logger.info(f"검색 쿼리: {search_query}")
+        header_image = get_pixabay_image(search_query, pixabay_api_key, width, image_height)
     
-    # 픽사베이 API를 통한 이미지 검색
-    if not header_image and pixabay_query and pixabay_api_key:
-        pixabay_image_url = get_pixabay_image(pixabay_query, pixabay_api_key, width, image_height)
-        if pixabay_image_url:
-            header_image = pixabay_image_url
-    
-    # 헤더 이미지 추가
     if header_image:
-        header_img = dwg.image(
-            href=header_image,
-            insert=(0, 0),
-            size=(width, image_height)
-        )
-        dwg.add(header_img)
-    else:
-        # 이미지가 없는 경우 기본 색상 배경
-        dwg.add(dwg.rect(insert=(0, 0), size=(width, image_height), fill="#E0E0E0"))
+        if not validate_image_url(header_image):
+            logger.warning(f"유효하지 않은 이미지 URL: {header_image}")
+        else:
+            header_img = dwg.image(
+                href=header_image,
+                insert=(0, 0),
+                size=(width, image_height)
+            )
+            header_img['preserveAspectRatio'] = 'xMidYMid slice'
+            dwg.add(header_img)
+            
+            gradient = dwg.linearGradient(
+                id='image_overlay',
+                start=(0, 0),
+                end=(0, 1)
+            )
+            gradient.add_stop_color(offset='0%', color='#000000', opacity=0.0)
+            gradient.add_stop_color(offset='100%', color='#000000', opacity=random.uniform(0.1, 0.3))
+            dwg.defs.add(gradient)
+            dwg.add(dwg.rect(
+                insert=(0, 0),
+                size=(width, image_height),
+                fill='url(#image_overlay)'
+            ))
     
-    # 메인 제목 추가
-    title_y = text_area_y + 60
-    title_text = dwg.text(
-        title, 
+    # 제목 영역 – 제목을 가운데 정렬하도록 text_anchor="middle" 사용
+    title_y = image_height + 70
+    title_element = dwg.text(
+        title,
         insert=(width/2, title_y),
-        text_anchor="middle",
-        font_family="Arial", 
+        font_family="'Noto Sans KR', Arial, sans-serif",
+        font_size="48px",  # 폰트 크기 증가
         font_weight="bold",
-        font_size="32px",
-        fill=title_color
+        fill=title_color,
+        text_anchor="middle"  # 가운데 정렬
     )
-    title_text.attribs['class'] = 'diagram-title'
-    dwg.add(title_text)
+    title_element.attribs['class'] = 'image-diagram-title'
+    dwg.add(title_element)
     
-    # 설명 텍스트 추가
-    description_y = title_y + 80
-    line_height = 30
+    # 본문 영역
+    content_start_y = title_y + 60
+    y_offset = content_start_y
+    padding = 40
+    section_width = width - (padding * 2)
+    
+    # 원형 번호 배지 색상 (테마에 따라)
+    mint_green = "#98D8C8" if not is_dark_theme else "#4A9B8C"
     
     for i, item in enumerate(descriptions):
-        item_y = description_y + (i * 100)
+        desc_title = item.get('title', '')
+        desc_text = item.get('content', '')
+        number = str(i + 1)
         
-        # 번호 원형 배경
-        if 'number' in item:
-            circle_radius = 20
-            circle_x = 50
-            circle_y = item_y - 10
-            
-            # 원형 배경
-            dwg.add(dwg.circle(
-                center=(circle_x, circle_y),
-                r=circle_radius,
-                fill=number_bg_color
-            ))
-            
-            # 번호 텍스트
-            number_text = dwg.text(
-                item['number'],
-                insert=(circle_x, circle_y + 7),
-                text_anchor="middle",
-                font_family="Arial",
-                font_weight="bold",
-                font_size="20px",
-                fill=number_color
-            )
-            number_text.attribs['class'] = 'diagram-text'
-            dwg.add(number_text)
-            
-            # 제목 및 설명 위치 조정
-            text_x = circle_x + circle_radius + 30
-        else:
-            text_x = 50
+        circle_radius = 15
+        circle_x = padding
+        circle_y = y_offset + circle_radius
+        dwg.add(dwg.circle(
+            center=(circle_x, circle_y),
+            r=circle_radius,
+            fill=mint_green
+        ))
+        dwg.add(dwg.text(
+            number,
+            insert=(circle_x, circle_y + 6),
+            font_family="'Noto Sans KR', Arial, sans-serif",
+            font_size="20px",  # 폰트 크기 증가
+            font_weight="bold",
+            fill="white",
+            text_anchor="middle"
+        ))
         
-        # 항목 제목
-        if 'title' in item:
-            title_element = dwg.text(
-                item['title'],
-                insert=(text_x, item_y),
-                font_family="Arial",
-                font_weight="bold",
-                font_size="22px",
-                fill=title_color
-            )
-            title_element.attribs['class'] = 'diagram-title'
-            dwg.add(title_element)
+        title_x = padding + (circle_radius * 2) + 10
+        sub_title_font_size = 32  # 폰트 크기 증가
+        section_title = dwg.text(
+            desc_title,
+            insert=(title_x, y_offset + sub_title_font_size),
+            font_family="'Noto Sans KR', Arial, sans-serif",
+            font_size=f"{sub_title_font_size}px",
+            font_weight="bold",
+            fill=title_color
+        )
+        section_title.attribs['class'] = 'image-diagram-section-title'
+        dwg.add(section_title)
         
-        # 항목 설명 (자동 줄바꿈 적용)
-        if 'description' in item:
-            desc_text = item.get('description', '')
-            desc_width = width - text_x - 50  # 여백 고려
-            
-            # 향상된 텍스트 줄바꿈 함수 사용
-            desc_group, desc_height = create_wrapped_text(
-                dwg=dwg,
-                text=desc_text,
-                x=text_x,
-                y=item_y + 30,
-                width=desc_width,
-                font_size="18px",
-                text_anchor="start",
-                font_family="Arial",
-                fill=description_color,
-                css_class="diagram-text"
-            )
-            dwg.add(desc_group)
+        desc_font_size = 24  # 폰트 크기 증가
+        y_offset_content = y_offset + sub_title_font_size + 30
+        
+        desc_group, desc_height = create_wrapped_text(
+            dwg,
+            desc_text,
+            title_x,
+            y_offset_content,
+            int(section_width * 0.5),
+            f"{desc_font_size}px",
+            "start",
+            "'Noto Sans KR', Arial, sans-serif",
+            "normal",
+            description_color,
+            line_height=1.5,
+            css_class="image-diagram-content"
+        )
+        dwg.add(desc_group)
+        
+        y_offset += desc_height + 100
     
-    # SVG 저장
+    if add_responsive:
+        add_responsive_script(dwg)
+    
     dwg.save()
-    
     return output_file
+
 
 def generate_image_text_layout(
     title: str,
@@ -300,28 +354,9 @@ def generate_image_text_layout(
     width: int = 800,
     height: int = 1200
 ) -> str:
-    """
-    40:60 비율의 이미지와 텍스트 레이아웃의 SVG 생성 함수의 간소화된 버전
-    
-    Args:
-        title: 메인 제목
-        content_items: 내용 항목 리스트 (각 항목은 {'number': '번호', 'title': '제목', 'description': '설명'} 형태)
-        output_file: 출력 파일 경로
-        image_url: 이미지 URL (선택 사항)
-        pixabay_query: 픽사베이 이미지 검색어 (선택 사항)
-        pixabay_api_key: 픽사베이 API 키 (선택 사항)
-        width: 너비 (기본값: 800px)
-        height: 높이 (기본값: 1200px)
-        
-    Returns:
-        str: 생성된 SVG 파일 경로
-    """
-    # 기본 색상 설정
-    background_color = "#FFFFFF"  # 흰색 배경
-    title_color = "#333333"      # 어두운 회색 제목
-    description_color = "#555555"  # 중간 회색 설명
-    number_color = "#FFFFFF"     # 흰색 번호 텍스트
-    number_bg_color = "#4A90E2"  # 파란색 번호 배경
+    background_color = "#FFFFFF"
+    title_color = "#333333"
+    description_color = "#555555"
     
     return generate_split_layout(
         title=title,
@@ -334,59 +369,40 @@ def generate_image_text_layout(
         height=height,
         background_color=background_color,
         title_color=title_color,
-        description_color=description_color,
-        number_color=number_color,
-        number_bg_color=number_bg_color
+        description_color=description_color
     )
+
 
 def generate_unified_image_diagram(
     main_title: str,
-    sub_title_sections: List[Dict[str, str]],
+    sub_title_sections: List[Dict[str, Any]],
     output_file: str,
     header_image: Optional[str] = None,
     pixabay_query: Optional[str] = None,
     pixabay_api_key: Optional[str] = None,
     width: int = 800,
-    height: int = 1000,
+    height: int = 800,
     background_color: str = "#FFFFFF",
     title_color: str = "#333333",
     description_color: str = "#555555",
-    number_color: str = "#FFFFFF",
-    number_bg_color: str = "#4A90E2",
     add_responsive: bool = True
 ) -> str:
-    """
-    통일된 인터페이스를 사용하여 이미지-텍스트 다이어그램을 생성합니다.
+    if len(sub_title_sections) > 2:
+        logger.warning("이미지 다이어그램은 1-2개의 섹션에 최적화되어 있습니다.")
+    logger.info(f"최종 픽사베이 검색어: {pixabay_query}")
+    if pixabay_query == 'auto:' and pixabay_api_key:
+        keywords_query = get_keywords_from_sections(sub_title_sections)
+        pixabay_query = keywords_query
+        logger.info(f"섹션 데이터에서 추출한 키워드: {keywords_query}")
     
-    Args:
-        main_title: 메인 제목
-        sub_title_sections: 서브 타이틀과 컨텐츠로 구성된 섹션들
-            각 항목은 {'title': '서브 타이틀', 'content': '내용'} 형태
-        output_file: 출력 SVG 파일 경로
-        header_image: 상단 이미지 경로 (선택 사항)
-        pixabay_query: 픽사베이 이미지 검색어 (선택 사항)
-        pixabay_api_key: 픽사베이 API 키 (선택 사항)
-        width: SVG 너비 (기본값: 800px)
-        height: SVG 높이 (기본값: 1000px)
-        background_color: 배경색 (기본값: 흰색)
-        title_color: 제목 색상 (기본값: 진한 회색)
-        description_color: 설명 텍스트 색상 (기본값: 회색)
-        number_color: 번호 텍스트 색상 (기본값: 흰색)
-        number_bg_color: 번호 배경 색상 (기본값: 파란색)
-        add_responsive: 반응형 속성 추가 여부 (기본값: True)
-        
-    Returns:
-        str: 생성된 SVG 파일 경로
-    """
-    # 데이터 구조 변환 (sub_title_sections의 각 항목은 {'title': '제목', 'content': '내용'} 형식)
-    # 이를 descriptions 형식 {'number': '번호', 'title': '제목', 'description': '설명'}으로 변환
     descriptions = []
-    for i, section in enumerate(sub_title_sections):
-        descriptions.append({
-            'number': str(i+1),
-            'title': section.get('title', f'섹션 {i+1}'),
-            'description': section.get('content', '')
-        })
+    for section in sub_title_sections:
+        desc = {
+            'title': section.get('title', ''),
+            'content': section.get('content', ''),
+            'keywords': section.get('keywords', [])
+        }
+        descriptions.append(desc)
     
     return generate_split_layout(
         title=main_title,
@@ -396,46 +412,40 @@ def generate_unified_image_diagram(
         pixabay_query=pixabay_query,
         pixabay_api_key=pixabay_api_key,
         width=width,
-        height=height,
+        height=width,  # 1:1 비율 유지
         background_color=background_color,
         title_color=title_color,
         description_color=description_color,
-        number_color=number_color,
-        number_bg_color=number_bg_color,
         add_responsive=add_responsive
     )
 
+
 if __name__ == "__main__":
-    # 테스트 데이터
     test_data = [
         {
-            "title": "골밀도 검사란",
-            "content": "골밀도 검사는 뼈의 밀도를 측정하여 골다공증 위험을 평가하는 중요한 검사입니다."
+            "title": "진실 은폐 의혹",
+            "content": "국정조사 중 진실을 덮고 국민을 속이려 했다는 이유로 고발.",
+            "keywords": ["진실", "은폐", "국정조사"]
         },
         {
-            "title": "검사가 필요한 사람",
-            "content": "50세 이상 여성, 저체중, 골절 경험이 있는 사람, 특정 약물 복용자 등이 우선 대상입니다."
-        },
-        {
-            "title": "검사 방법",
-            "content": "DEXA 스캔은 가장 정확한 골밀도 측정 방법으로, 이중 에너지 X선 흡수계측법을 사용합니다."
-        },
-        {
-            "title": "결과 해석",
-            "content": "T-점수는 젊은 성인과 비교한 값으로, -1.0 이상은 정상, -1.0~-2.5는 골감소증, -2.5 이하는 골다공증으로 진단합니다."
+            "title": "거짓 공문서 제출",
+            "content": "압수·통신 영장 관련 허위 공문서 제출 및 청문회 위증 주장.",
+            "keywords": ["공문서", "위증", "청문회"]
         }
     ]
     
-    # 출력 디렉토리 생성
     os.makedirs("./outputs", exist_ok=True)
     
-    # 테스트 실행
-    output_file = generate_unified_image_diagram(
-        main_title="골밀도 검사 가이드",
+    output_path = generate_unified_image_diagram(
+        main_title="여당, 공수처장 검찰 고발! 왜?",
         sub_title_sections=test_data,
         output_file="./outputs/image_diagram_test.svg",
-        pixabay_query="bone health", 
-        pixabay_api_key="YOUR_API_KEY_HERE"  # 실제 사용 시 유효한 API 키로 변경
+        pixabay_query="business meeting", 
+        pixabay_api_key="YOUR_API_KEY_HERE",
+        width=800,
+        height=800,
+        background_color="#FFFFFF",
+        add_responsive=True
     )
     
-    print(f"이미지 다이어그램 생성 완료: {output_file}") 
+    print(f"이미지 다이어그램 생성 완료: {output_path}")

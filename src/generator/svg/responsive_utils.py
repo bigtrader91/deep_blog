@@ -1,3 +1,5 @@
+# src.generator.svg.responsive_utils.py
+
 """
 SVG 다이어그램의 반응형 기능을 제공하는 유틸리티 모듈
 
@@ -24,18 +26,21 @@ def add_responsive_script(dwg: 'svgwrite.Drawing') -> None:
     
     # 스타일 추가 방식 변경 - 객체 생성 없이 직접 추가
     style = dwg.style("""
-        .diagram-text { 
-            font-family: Arial, sans-serif; 
-            font-size: 16px;
-        }
-        .diagram-title { 
-            font-family: Arial, sans-serif; 
-            font-weight: bold;
-            font-size: 24px;
-        }
-        .card-content { 
+        .diagram-main-title {
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-weight: bold;
+            font-size: 42px; /* 메인 타이틀용 기본 크기 */
+        }
+
+        .diagram-card-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 32px; /* 카드 제목용 기본 크기 */
+        }
+
+        .card-content {
+            font-family: Arial, sans-serif;
+            font-size: 24px; /* 카드 내용용 기본 크기 */
         }
         @media screen and (max-width: 600px) {
             .diagram-text { font-size: 12px; }
@@ -141,7 +146,8 @@ def wrap_text(
     text: str, 
     width: int, 
     font_size: int = 16, 
-    max_lines: Optional[int] = None
+    max_lines: Optional[int] = None,
+    diagram_type: str = 'card'  # 'card' 또는 'image'
 ) -> List[str]:
     """
     텍스트를 주어진 너비에 맞게 줄바꿈합니다.
@@ -151,13 +157,16 @@ def wrap_text(
         width: 최대 너비 (픽셀)
         font_size: 폰트 크기 (픽셀)
         max_lines: 최대 줄 수 (None이면 제한 없음)
+        diagram_type: 다이어그램 타입 ('card' 또는 'image')
         
     Returns:
         List[str]: 줄바꿈된 텍스트 라인 목록
     """
-    # 대략적인 문자 수 계산 (폰트 크기에 따라 조정)
-    # 한글은 영문보다 더 많은 공간을 차지하므로 계수를 0.8로 증가
-    chars_per_line = int(width / (font_size * 1.2))
+    # 다이어그램 타입에 따른 계수 설정
+    width_factor = 0.8 if diagram_type == 'card' else 0.38
+    
+    # 대략적인 문자 수 계산 (폰트 크기와 다이어그램 타입에 따라 조정)
+    chars_per_line = int(width / (font_size * width_factor))
     
     # 텍스트 줄바꿈
     import textwrap

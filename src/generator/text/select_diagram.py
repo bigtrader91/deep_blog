@@ -1,3 +1,4 @@
+# src.generator.text.select_diagram.py
 """
 다이어그램 선택 및 분석을 위한 모듈
 """
@@ -29,11 +30,15 @@ class DiagramContent(BaseModel):
     title: str = Field(..., description="서브 타이틀(키워드)")
     content: str = Field(..., description="서브 타이틀에 대한 내용")
 
-    def to_dict(self) -> Dict[str, str]:
-        """딕셔너리 형태로 변환"""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        DiagramContent 객체를 dict로 변환하는 메서드
+        """
         return {
             "title": self.title,
-            "content": self.content
+            "content": self.content,
+            # "keywords": self.keywords or []
         }
 
 
@@ -43,8 +48,9 @@ class DiagramResult(BaseModel):
     main_title: str = Field(..., description="핵심 주제(핵심키워드 조합)")
     sub_title_sections: List[DiagramContent] = Field(
         ..., 
-        description="5개 이하의 sub title sections. 각 섹션은 반드시 'title'과 'content' 키를 포함해야 합니다."
+        description="4개 이하의 sub title sections. 각 섹션은 반드시 'title'과 'content' 키를 포함해야 합니다."
     )
+    keywords: List[str] = Field(..., description="a list of English keywords")
 
     @classmethod
     def with_fallback(cls, diagram_name: str, main_title: str, sections: Optional[List[Dict[str, str]]] = None):
@@ -85,11 +91,44 @@ class DiagramResult(BaseModel):
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        """딕셔너리 형태로 변환"""
+        """API 응답 형식으로 변환"""
+        # 섹션 데이터 구성
+        sections = []
+        for i, section in enumerate(self.sub_title_sections):
+            section_dict = section.to_dict()
+            
+            # 전체 키워드가 있고 섹션에 키워드가 없는 경우, 키워드를 할당
+            if not section_dict.get("keywords") and self.keywords:
+                # 섹션 제목과 관련된 키워드 필터링 (없으면 키워드 중 일부만 랜덤 할당)
+                section_keywords = []
+                for keyword in self.keywords:
+                    # 키워드가 섹션 제목이나 내용에 포함되어 있으면 관련 키워드로 간주
+                    if (
+                        keyword.lower() in section_dict["title"].lower() or 
+                        keyword.lower() in section_dict["content"].lower()
+                    ):
+                        section_keywords.append(keyword)
+                
+                # 관련 키워드가 없거나 너무 적으면 랜덤하게 일부 키워드 추가
+                if len(section_keywords) < 2 and len(self.keywords) > 0:
+                    import random
+                    num_random = min(2, len(self.keywords))
+                    random_keywords = random.sample(self.keywords, num_random)
+                    
+                    # 중복 제거
+                    for kw in random_keywords:
+                        if kw not in section_keywords:
+                            section_keywords.append(kw)
+                
+                section_dict["keywords"] = section_keywords
+            
+            sections.append(section_dict)
+        
         return {
             "diagram_name": self.diagram_name,
             "main_title": self.main_title,
-            "sub_title_sections": [section.to_dict() for section in self.sub_title_sections]
+            "sub_title_sections": sections,
+            "keywords": self.keywords
         }
 
 
@@ -97,29 +136,8 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 prompt = ChatPromptTemplate.from_messages([
     (
         "system",
-        """당신은 PPT 프리젠테이션에 사용할 다이어그램을 선택하고 제목과 서브 타이틀을 생성하는 전문가입니다.
+        """당신은 PPT 프리젠테이션에  제목과 서브 타이틀을 생성하는 전문가입니다.
  
-출력 형식이 매우 중요합니다. 반드시 다음 형식을 지켜주세요:
-        
-```json
-{{
-    "diagram_name": "card 또는 image 중 하나",
-    "main_title": "핵심 주제",
-    "sub_title_sections": [
-        {{"title": "서브 타이틀 1", "content": "내용 1"}},
-        {{"title": "서브 타이틀 2", "content": "내용 2"}}
-    ]
-}}
-```
-
-참고: 실제 diagram_name은 섹션 수에 따라 자동으로 결정됩니다:
-- 섹션이 3개 이상이면 자동으로 'card' 다이어그램이 사용됩니다.
-- 섹션이 2개 이하면 자동으로 'image' 다이어그램이 사용됩니다.
-
-따라서 diagram_name 필드는 실제로는 무시되고 섹션 수에 따라 자동 결정됩니다.
-        
-sub_title_sections은 반드시 2개 이상, 5개 이하로 생성해야 하며, 각 항목은 반드시 'title'과 'content' 키를 포함해야 합니다.
-다른 형식의 키(예: 'description', 'text' 등)는 사용하지 마세요.
 """
     ),
     (
@@ -128,13 +146,12 @@ sub_title_sections은 반드시 2개 이상, 5개 이하로 생성해야 하며,
         
 {data}
         
-텍스트 내용을 분석하여:
-1. 텍스트의 특성, 구조, 내용에 따라 가장 적합한 다이어그램 유형(card, image)을 선택하세요.
-2. 텍스트의 핵심 주제를 명확히 표현하는 메인 타이틀을 생성하세요.
-3. 내용을 잘 구조화하여 2-5개의 서브 타이틀과 그에 맞는 내용을 생성하세요.
-        
-각 서브 타이틀 섹션은 반드시 'title'과 'content' 키를 포함해야 합니다.
-
+텍스트 내용을 요약하여:
+1. 텍스트의 핵심 주제를 명확히 표현하는 메인 타이틀을 생성하세요.
+2. sections 갯수는 이야기의 주제 갯수만큼생성해야합니다 ex) 주제 1개면 1개, 주제 2개면 2개, 주제 3개면 3개, 주제 4개면 4개
+3. 각 서브 타이틀은 반드시 'title'과 'content' 키를 포함해야 합니다.
+4. title 30자 이내, content 는 100자 이내로 작성 
+5. 키워드(keywords)는 영어로 작성해야합니다.
 """
     ),
 ])

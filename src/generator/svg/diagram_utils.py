@@ -1,3 +1,4 @@
+# src.generator.svg.diagram_utils.py
 """
 통합된 다이어그램 생성 유틸리티 모듈입니다.
 
@@ -9,14 +10,18 @@ from typing import Dict, List, Tuple, Optional, Any
 import os
 import logging
 import importlib
+import random
 
 # 로깅 설정
 logger = logging.getLogger(__name__)
 
+# 공통 유틸리티 모듈
+from .common_utils import get_keywords_from_sections
+
 # DiagramType은 이제 __init__.py에서 정의됨
 
 
-def validate_section_data(sections: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def validate_section_data(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     데이터 섹션을 검증하고 필요한 경우 수정합니다.
     
@@ -24,7 +29,7 @@ def validate_section_data(sections: List[Dict[str, str]]) -> List[Dict[str, str]
         sections: 검증할 섹션 리스트
         
     Returns:
-        List[Dict[str, str]]: 검증된 섹션 리스트
+        List[Dict[str, Any]]: 검증된 섹션 리스트
     """
     valid_sections = []
     
@@ -53,6 +58,10 @@ def validate_section_data(sections: List[Dict[str, str]]) -> List[Dict[str, str]
         else:
             valid_section["content"] = section["content"]
         
+        # keywords 필드가 있으면 복사
+        if "keywords" in section:
+            valid_section["keywords"] = section["keywords"]
+        
         valid_sections.append(valid_section)
     
     return valid_sections
@@ -61,7 +70,7 @@ def validate_section_data(sections: List[Dict[str, str]]) -> List[Dict[str, str]
 def generate_diagram(
     diagram_type: str,
     main_title: str,
-    sub_title_sections: List[Dict[str, str]],
+    sub_title_sections: List[Dict[str, Any]],
     output_file: str,
     **kwargs
 ) -> str:
@@ -72,7 +81,7 @@ def generate_diagram(
         diagram_type: 다이어그램 유형 ("card", "image" 중 하나)
         main_title: 메인 타이틀
         sub_title_sections: 서브 타이틀 섹션 리스트
-            각 항목은 {'title': '서브 타이틀', 'content': '내용'} 형태
+            각 항목은 {'title': '서브 타이틀', 'content': '내용', 'keywords': ['키워드1', '키워드2']} 형태
         output_file: 출력 SVG 파일 경로
         **kwargs: 각 다이어그램 유형별 추가 매개변수
         
@@ -104,6 +113,13 @@ def generate_diagram(
     # 항상 자동 결정된 다이어그램 유형으로 설정
     diagram_type = auto_diagram_type
     
+    # pixabay_query 파라미터가 'auto:'로 시작하면 섹션 데이터에서 자동으로 키워드 추출
+    if kwargs.get('pixabay_query') == 'auto:' and kwargs.get('pixabay_api_key'):
+        # 섹션 데이터에서 키워드 추출
+        keywords_query = get_keywords_from_sections(validated_sections)
+        kwargs['pixabay_query'] = keywords_query
+        logger.info(f"섹션 데이터에서 추출한 키워드: {keywords_query}")
+    
     # 각 다이어그램 모듈 동적 임포트
     try:
         if diagram_type == "card":
@@ -127,8 +143,23 @@ def generate_diagram(
             from .image_diagram import generate_unified_image_diagram
             
             # 크기 파라미터 처리
-            width = kwargs.pop('width', 800)
-            height = kwargs.pop('height', 1000)
+            size = kwargs.pop('size', 800)  # size 매개변수 추출
+            width = kwargs.pop('width', size)  # size를 기본값으로 사용하여 width 설정
+            height = kwargs.pop('height', int(size * 1.25))  # 기본 비율 1:1.25 적용
+            
+            # image_diagram에서 지원하지 않는 card_diagram 전용 매개변수 제거
+            kwargs.pop('enable_card_backgrounds', None)
+            kwargs.pop('card_darkness', None)
+            kwargs.pop('card_blur', None)
+            kwargs.pop('equal_card_heights', None)
+            kwargs.pop('card_color', None)
+            kwargs.pop('content_color', None)
+            kwargs.pop('background_image', None)
+            kwargs.pop('background_image_opacity', None)
+            kwargs.pop('header_image_height', None)
+            kwargs.pop('rounded_corners', None)
+            kwargs.pop('card_padding', None)
+            kwargs.pop('vertical_spacing', None)
             
             return generate_unified_image_diagram(
                 main_title=main_title,

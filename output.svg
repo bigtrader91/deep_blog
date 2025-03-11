@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<svg baseProfile="full" height="100%" preserveAspectRatio="xMidYMid meet" version="1.1" viewBox="0 0 500 670" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs /><style type="text/css"><![CDATA[
-        .diagram-text { 
-            font-family: Arial, sans-serif; 
-            font-size: 16px;
-        }
-        .diagram-title { 
-            font-family: Arial, sans-serif; 
-            font-weight: bold;
-            font-size: 24px;
-        }
-        .card-content { 
+<svg baseProfile="full" height="100%" preserveAspectRatio="xMidYMid meet" version="1.1" viewBox="0 0 800 800" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="bg-blur-filter"><feGaussianBlur in="SourceGraphic" stdDeviation="1.1183354576253124" /></filter></defs><style type="text/css"><![CDATA[
+        .diagram-main-title {
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-weight: bold;
+            font-size: 42px; /* 메인 타이틀용 기본 크기 */
+        }
+
+        .diagram-card-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 32px; /* 카드 제목용 기본 크기 */
+        }
+
+        .card-content {
+            font-family: Arial, sans-serif;
+            font-size: 24px; /* 카드 내용용 기본 크기 */
         }
         @media screen and (max-width: 600px) {
             .diagram-text { font-size: 12px; }
@@ -75,4 +78,4 @@
                 window.addEventListener('load', resizeSVG);
             }
         })();
-    ]]></script><rect fill="#FFFFFF" height="670" width="500" x="0" y="0" /><text class="diagram-title" dominant-baseline="middle" fill="#FFFFFF" font-family="Arial" font-size="20px" font-weight="bold" text-anchor="middle" x="250.0" y="60">한한령 해제와 한국 콘텐츠의 미래</text><rect fill="#000000" height="160" opacity="0.2" rx="10" ry="10" width="425.0" x="40.5" y="103" /><rect fill="#FEEBDC" height="160" rx="10" ry="10" width="425.0" x="37.5" y="100" /><text class="diagram-title" fill="#333333" font-family="Arial" font-size="12px" font-weight="bold" text-anchor="start" x="67.5" y="150">한한령의 영향</text><g><text class="diagram-text card-content" fill="#333333" font-family="Arial" font-size="10px" font-weight="normal" text-anchor="start" x="67.5" y="180.0">한한령이 시작된 이후 10년 동안 한국 콘텐츠의 중국</text><text class="diagram-text card-content" fill="#333333" font-family="Arial" font-size="10px" font-weight="normal" text-anchor="start" x="67.5" y="195.0">시장 진입이 어려워졌다.</text></g><rect fill="#000000" height="160" opacity="0.2" rx="10" ry="10" width="425.0" x="40.5" y="283" /><rect fill="#FEEBDC" height="160" rx="10" ry="10" width="425.0" x="37.5" y="280" /><text class="diagram-title" fill="#333333" font-family="Arial" font-size="12px" font-weight="bold" text-anchor="start" x="67.5" y="330">중국 콘텐츠 환경 변화</text><g><text class="diagram-text card-content" fill="#333333" font-family="Arial" font-size="10px" font-weight="normal" text-anchor="start" x="67.5" y="360.0">중국 내 콘텐츠 산업이 성장하면서 한국 콘텐츠의 빠른</text><text class="diagram-text card-content" fill="#333333" font-family="Arial" font-size="10px" font-weight="normal" text-anchor="start" x="67.5" y="375.0">자리 잡기가 힘들어졌다.</text></g><rect fill="#000000" height="160" opacity="0.2" rx="10" ry="10" width="425.0" x="40.5" y="463" /><rect fill="#FEEBDC" height="160" rx="10" ry="10" width="425.0" x="37.5" y="460" /><text class="diagram-title" fill="#333333" font-family="Arial" font-size="12px" font-weight="bold" text-anchor="start" x="67.5" y="510">새로운 접근 방식 필요</text><g><text class="diagram-text card-content" fill="#333333" font-family="Arial" font-size="10px" font-weight="normal" text-anchor="start" x="67.5" y="540.0">과거의 방식으로 접근하기보다는 새로운 시장을 개척하는</text><text class="diagram-text card-content" fill="#333333" font-family="Arial" font-size="10px" font-weight="normal" text-anchor="start" x="67.5" y="555.0">전략이 필요하다.</text></g></svg>
+    ]]></script><rect fill="#111111" height="800" width="800" x="0" y="0" /><g filter="url(#bg-blur-filter)" opacity="0.2"><image height="800" width="800" x="0" xlink:href="https://pixabay.com/get/g4db0f96d0d33a563a35e49daf56628cec267782e98b94fba946085b73fddf395fba0485e68f63555c2c60f7c624651ad7398ca0f5234cfe4e2e9b7325eb3ea66_1280.jpg" y="0" /><rect fill="#111111" height="800" opacity="0.5610563633659027" width="800" x="0" y="0" /></g><rect fill="#111111" height="120" opacity="0.5" width="800" x="0" y="10" /><text class="diagram-main-title" dominant-baseline="middle" fill="#FFFFFF" font-family="Arial" font-size="160px" font-weight="bold" text-anchor="middle" x="400.0" y="60">여행과 건강한 라이프스타일</text><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="118" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="115" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="160">대리만족의 즐거움</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="190.0">노홍철 님의 유튜브를 통해 여행의 대리만족을 느끼며</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="218.8">즐거움을 찾고 있습니다.</text></g><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="246" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="243" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="288">다이어트 효과</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="318.0">린 다이어트를 통해 볼살이 줄어들고 옷태가 개선되는 변화를</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="346.8">경험하고 있습니다.</text></g><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="374" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="371" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="416">광고 모델 발탁</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="446.0">노홍철 님이 린 다이어트의 광고 모델로 발탁되어 더욱</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="474.8">관심이 집중되고 있습니다.</text></g></svg>
