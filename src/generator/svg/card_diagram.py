@@ -116,13 +116,13 @@ def create_text_with_wrapping(
 
 def add_responsive_scripts(dwg: svgwrite.Drawing) -> None:
     """
-    SVG에 반응형 동작을 위한 기본 속성만 추가합니다.
-    SVG 반응형 스크립트를 추가합니다.
+    SVG에 반응형 동작을 위한 CSS 스타일을 추가합니다.
+    JavaScript를 사용하지 않고 CSS와 SVG 속성만으로 반응형 기능을 제공합니다.
     
     Args:
         dwg: SVG 드로잉 객체
     """
-    # 향상된 반응형 스크립트 추가
+    # CSS 기반 반응형 스타일 추가
     add_responsive_script(dwg)
 
 def generate_card_diagram(

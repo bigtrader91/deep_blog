@@ -1,3 +1,4 @@
+# src/configuration.py
 import os
 from enum import Enum
 from dataclasses import dataclass, fields

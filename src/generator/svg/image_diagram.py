@@ -17,8 +17,8 @@ from svgwrite.container import Group
 from svgwrite.text import Text
 import random
 
-# responsive_utils.py에 정의된 함수들을 그대로 사용한다고 가정
-from .responsive_utils import add_responsive_script, wrap_text
+# responsive_utils.py에서 wrap_text만 임포트 (add_responsive_script 제거)
+from .responsive_utils import wrap_text
 
 # 공통 유틸 함수 (픽사베이 이미지 검색 등)
 from .common_utils import (
@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 def add_responsive_attributes(dwg: svgwrite.Drawing) -> None:
     """
     SVG 드로잉 객체에 반응형 속성과 스타일을 추가합니다.
+    CSS를 활용하여 JavaScript 없이 반응형 기능을 제공합니다.
     
     Args:
         dwg: SVG 드로잉 객체
@@ -43,80 +44,69 @@ def add_responsive_attributes(dwg: svgwrite.Drawing) -> None:
     dwg.attribs['xmlns'] = 'http://www.w3.org/2000/svg'
     dwg.attribs['xmlns:xlink'] = 'http://www.w3.org/1999/xlink'
     
-    # 이미지 다이어그램 전용 스타일 추가
+    # SVG 크기가 명시적으로 설정되지 않은 경우 viewBox 확인 및 설정
+    if 'viewBox' not in dwg.attribs:
+        # 기본 크기 정보 가져오기
+        size = dwg.attribs.get('size', '800 800').split()
+        width = size[0] if len(size) > 0 else 800
+        height = size[1] if len(size) > 1 else width
+        dwg.attribs['viewBox'] = f"0 0 {width} {height}"
+    
+    # 반응형을 위한 CSS 기반 속성 설정
+    dwg.attribs['width'] = '100%'
+    # height를 'auto'가 아닌 '100%'로 설정 (SVG 속성은 'auto'를 허용하지 않음)
+    dwg.attribs['height'] = '100%'
+    
+    # CSS 스타일 추가
     style = dwg.style("""
+        svg {
+            max-width: 100%;
+            height: auto; /* CSS에서는 auto 사용 가능 */
+            display: block; /* 불필요한 여백 방지 */
+        }
+        
         .image-diagram-title {
             font-family: 'Noto Sans KR', Arial, sans-serif;
             font-weight: bold;
-            font-size: 48px; /* 메인 타이틀용 기본 크기 증가 */
+            font-size: 48px;
         }
+        
         .image-diagram-section-title {
             font-family: 'Noto Sans KR', Arial, sans-serif;
             font-weight: bold;
-            font-size: 32px; /* 섹션 제목용 기본 크기 증가 */
+            font-size: 32px;
         }
+        
         .image-diagram-content {
             font-family: 'Noto Sans KR', Arial, sans-serif;
-            font-size: 24px; /* 섹션 내용용 기본 크기 증가 */
+            font-size: 24px;
         }
+        
+        @media screen and (max-width: 800px) {
+            .image-diagram-title { font-size: 42px; }
+            .image-diagram-section-title { font-size: 28px; }
+            .image-diagram-content { font-size: 22px; }
+            .diagram-text { font-size: 14px; }
+            .diagram-title { font-size: 22px; }
+        }
+        
         @media screen and (max-width: 600px) {
             .image-diagram-title { font-size: 36px; }
-            .image-diagram-section-title { font-size: 28px; }
-            .image-diagram-content { font-size: 20px; }
-        }
-        @media screen and (max-width: 400px) {
-            .image-diagram-title { font-size: 32px; }
             .image-diagram-section-title { font-size: 24px; }
+            .image-diagram-content { font-size: 20px; }
+            .diagram-text { font-size: 12px; }
+            .diagram-title { font-size: 20px; }
+        }
+        
+        @media screen and (max-width: 400px) {
+            .image-diagram-title { font-size: 30px; }
+            .image-diagram-section-title { font-size: 20px; }
             .image-diagram-content { font-size: 18px; }
+            .diagram-text { font-size: 10px; }
+            .diagram-title { font-size: 18px; }
         }
     """)
     dwg.add(style)
-    
-    # 반응형 크기 조절 스크립트 추가
-    script = dwg.script(content="""
-        (function() {
-            var svg = document.currentScript.parentNode;
-            
-            function resizeImageDiagram() {
-                var container = svg.parentNode;
-                if (!container) return;
-                
-                var containerWidth = container.clientWidth;
-                if (containerWidth <= 0) return;
-                
-                // SVG 크기를 컨테이너에 맞게 조절 (1:1 비율 유지)
-                svg.setAttribute('width', containerWidth);
-                svg.setAttribute('height', containerWidth);
-                
-                // 화면 크기에 따른 스케일 계산
-                var scale = containerWidth < 400 ? 0.7 : 
-                           containerWidth < 600 ? 0.85 : 1;
-                
-                // 폰트 크기 동적 조절
-                var titles = svg.getElementsByClassName('image-diagram-title');
-                var sectionTitles = svg.getElementsByClassName('image-diagram-section-title');
-                var contents = svg.getElementsByClassName('image-diagram-content');
-                
-                function adjustFontSize(elements, baseSize) {
-                    for (var i = 0; i < elements.length; i++) {
-                        elements[i].style.fontSize = (baseSize * scale) + 'px';
-                    }
-                }
-                
-                adjustFontSize(titles, 48);
-                adjustFontSize(sectionTitles, 32);
-                adjustFontSize(contents, 24);
-            }
-            
-            window.addEventListener('resize', resizeImageDiagram);
-            if (document.readyState === 'complete') {
-                resizeImageDiagram();
-            } else {
-                window.addEventListener('load', resizeImageDiagram);
-            }
-        })();
-    """, type="text/javascript")
-    dwg.add(script)
 
 
 def create_wrapped_text(
@@ -336,9 +326,6 @@ def generate_split_layout(
         dwg.add(desc_group)
         
         y_offset += desc_height + 100
-    
-    if add_responsive:
-        add_responsive_script(dwg)
     
     dwg.save()
     return output_file
