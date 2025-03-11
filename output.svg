@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg baseProfile="full" height="100%" preserveAspectRatio="xMidYMid meet" version="1.1" viewBox="0 0 800 800" width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="bg-blur-filter"><feGaussianBlur in="SourceGraphic" stdDeviation="1.1183354576253124" /></filter></defs><style type="text/css"><![CDATA[
+        .diagram-main-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 42px; /* 메인 타이틀용 기본 크기 */
+        }
+
+        .diagram-card-title {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 32px; /* 카드 제목용 기본 크기 */
+        }
+
+        .card-content {
+            font-family: Arial, sans-serif;
+            font-size: 24px; /* 카드 내용용 기본 크기 */
+        }
+        @media screen and (max-width: 600px) {
+            .diagram-text { font-size: 12px; }
+            .diagram-title { font-size: 20px; }
+            .card-content { font-size: 11px; }
+        }
+        @media screen and (max-width: 400px) {
+            .diagram-text { font-size: 10px; }
+            .diagram-title { font-size: 18px; }
+            .card-content { font-size: 9px; }
+        }
+    ]]></style><script type="text/javascript"><![CDATA[
+        (function() {
+            // SVG 요소 참조
+            var svg = document.currentScript.parentNode;
+            
+            // 반응형 크기 조절 함수
+            function resizeSVG() {
+                var container = svg.parentNode;
+                if (container) {
+                    var containerWidth = container.clientWidth;
+                    if (containerWidth > 0) {
+                        // 컨테이너 너비에 맞게 SVG 크기 조절
+                        svg.setAttribute('width', containerWidth);
+                        var viewBox = svg.getAttribute('viewBox').split(' ');
+                        var aspectRatio = viewBox[2] / viewBox[3];
+                        svg.setAttribute('height', containerWidth / aspectRatio);
+                        
+                        // 화면 크기에 따른 폰트 크기 조절
+                        var scale = containerWidth < 400 ? 0.7 : 
+                                  containerWidth < 600 ? 0.8 : 1;
+                        
+                        // 텍스트 요소들의 폰트 크기 고정 비율로 조절
+                        var texts = svg.getElementsByClassName('diagram-text');
+                        for (var i = 0; i < texts.length; i++) {
+                            // 기본 클래스별 크기 사용
+                            var baseSize = 16; // diagram-text 기본 크기
+                            texts[i].setAttribute('font-size', (baseSize * scale) + 'px');
+                        }
+                        
+                        var titles = svg.getElementsByClassName('diagram-title');
+                        for (var i = 0; i < titles.length; i++) {
+                            var baseSize = 24; // diagram-title 기본 크기
+                            titles[i].setAttribute('font-size', (baseSize * scale) + 'px');
+                        }
+                        
+                        var cardTexts = svg.getElementsByClassName('card-content');
+                        for (var i = 0; i < cardTexts.length; i++) {
+                            var baseSize = 14; // card-content 기본 크기
+                            cardTexts[i].setAttribute('font-size', (baseSize * scale) + 'px');
+                        }
+                    }
+                }
+            }
+            
+            // 초기 로드 및 창 크기 변경 시 크기 조절
+            window.addEventListener('resize', resizeSVG);
+            if (document.readyState === 'complete') {
+                resizeSVG();
+            } else {
+                window.addEventListener('load', resizeSVG);
+            }
+        })();
+    ]]></script><rect fill="#111111" height="800" width="800" x="0" y="0" /><g filter="url(#bg-blur-filter)" opacity="0.2"><image height="800" width="800" x="0" xlink:href="https://pixabay.com/get/g4db0f96d0d33a563a35e49daf56628cec267782e98b94fba946085b73fddf395fba0485e68f63555c2c60f7c624651ad7398ca0f5234cfe4e2e9b7325eb3ea66_1280.jpg" y="0" /><rect fill="#111111" height="800" opacity="0.5610563633659027" width="800" x="0" y="0" /></g><rect fill="#111111" height="120" opacity="0.5" width="800" x="0" y="10" /><text class="diagram-main-title" dominant-baseline="middle" fill="#FFFFFF" font-family="Arial" font-size="160px" font-weight="bold" text-anchor="middle" x="400.0" y="60">여행과 건강한 라이프스타일</text><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="118" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="115" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="160">대리만족의 즐거움</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="190.0">노홍철 님의 유튜브를 통해 여행의 대리만족을 느끼며</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="218.8">즐거움을 찾고 있습니다.</text></g><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="246" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="243" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="288">다이어트 효과</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="318.0">린 다이어트를 통해 볼살이 줄어들고 옷태가 개선되는 변화를</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="346.8">경험하고 있습니다.</text></g><rect fill="#000000" height="120" opacity="0.3" rx="10" ry="10" width="680.0" x="63.0" y="374" /><g><rect fill="#FEEBDC" height="120" opacity="0.95" rx="10" ry="10" width="680.0" x="60.0" y="371" /></g><text class="diagram-card-title" fill="#333333" font-family="Arial" font-size="104px" font-weight="bold" text-anchor="start" x="85.0" y="416">광고 모델 발탁</text><g><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="446.0">노홍철 님이 린 다이어트의 광고 모델로 발탁되어 더욱</text><text class="diagram-text card-content" fill="#000000" font-family="Arial" font-size="24px" font-weight="normal" text-anchor="start" x="85.0" y="474.8">관심이 집중되고 있습니다.</text></g></svg>
