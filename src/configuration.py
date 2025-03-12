@@ -7,17 +7,30 @@ from typing import Any, Optional, Dict
 from langchain_core.runnables import RunnableConfig
 from dataclasses import dataclass
 
-DEFAULT_REPORT_STRUCTURE = """Use this structure to create a report on the user-provided topic:
+DEFAULT_blog_STRUCTURE = """Use the following structure to write a blog post (Answer in Korean):
 
-1. Introduction (no research needed)
-   - Brief overview of the topic area
+1. Introduction
+   - Include an engaging hook to capture reader attention.
+   - Briefly introduce the blog topic (no research required).
 
-2. Main Body Sections:
-   - Each section should focus on a sub-topic of the user-provided topic
-   
+2. Main Body Sections (Total of 7 sections)
+   - Each section should focus on a sub-topic of the main topic.
+   - Write at least 200 characters per section.
+   - Include a table in the second and fifth sections.
+   - Include a list in the third and sixth sections.
+   - Include Q&A in the seventh section.
+   - Q&A should be in the following format:
+        ### Q: question?
+        A: answer
+        ### Q: question?
+        A: answer
+
 3. Conclusion
-   - Aim for 1 structural element (either a list of table) that distills the main body sections 
-   - Provide a concise summary of the report"""
+   - Summarize the key message from the main content naturally.
+   - Emphasize key points to ensure readers remember them.
+   - Provide a simple action point (something readers can actually do).
+   - Add tags to the end of the blog post.
+"""
 
 class SearchAPI(Enum):
     PERPLEXITY = "perplexity"
@@ -40,9 +53,9 @@ class WriterProvider(Enum):
 @dataclass(kw_only=True)
 class Configuration:
     """챗봇의 구성 가능한 필드."""
-    report_structure: str = DEFAULT_REPORT_STRUCTURE # 기본 보고서 구조로 기본값 설정
+    blog_structure: str = DEFAULT_blog_STRUCTURE # 기본 보고서 구조로 기본값 설정
     number_of_queries: int = 5 # 반복당 생성할 검색 쿼리 수
-    max_search_depth: int = 2 # 최대 반성 + 검색 반복 횟수
+    max_search_depth: int = 5 # 최대 반성 + 검색 반복 횟수
     planner_provider: PlannerProvider = PlannerProvider.OPENAI  # 제공자로 Anthropic을 기본값으로 설정
     planner_model: str = "gpt-4o-mini" # claude-3-7-sonnet-latest를 기본값으로 설정
     writer_provider: WriterProvider = WriterProvider.OPENAI # 제공자로 Anthropic을 기본값으로 설정
