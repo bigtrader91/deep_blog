@@ -4,61 +4,61 @@ import operator
 
 class Section(BaseModel):
     name: str = Field(
-        description="보고서의 이 섹션에 대한 이름.",
+        description="Name for this section of the blog.",
     )
     description: str = Field(
-        description="이 섹션에서 다룰 주요 주제와 개념에 대한 간략한 개요.",
+        description="Brief overview of the main topics and concepts to be covered in this section.",
     )
     research: bool = Field(
-        description="보고서의 이 섹션에 대해 웹 연구를 수행할지 여부."
+        description="Whether to perform web research for this section of the blog."
     )
     content: str = Field(
-        description="섹션의 내용."
+        description="The content of the section."
     )   
 
 class Sections(BaseModel):
     sections: List[Section] = Field(
-        description="보고서의 섹션들.",
+        description="Sections of the blog.",
     )
 
 class SearchQuery(BaseModel):
-    search_query: str = Field(None, description="웹 검색을 위한 쿼리.")
+    search_query: str = Field(None, description="Query for web search.")
 
 class Queries(BaseModel):
     queries: List[SearchQuery] = Field(
-        description="검색 쿼리 목록.",
+        description="List of search queries.",
     )
 
 class Feedback(BaseModel):
     grade: Literal["pass","fail"] = Field(
-        description="응답이 요구 사항을 충족하는지('pass') 또는 수정이 필요한지('fail')를 나타내는 평가 결과."
+        description="Evaluation result indicating whether the response meets requirements ('pass') or needs revision ('fail')."
     )
     follow_up_queries: List[SearchQuery] = Field(
-        description="후속 검색 쿼리 목록.",
+        description="List of follow-up search queries.",
     )
 
-class ReportStateInput(TypedDict):
-    topic: str # 보고서 주제
+class blogStateInput(TypedDict):
+    topic: str # blog topic
     
-class ReportStateOutput(TypedDict):
-    final_report: str # 최종 보고서
+class blogStateOutput(TypedDict):
+    final_blog: str # Final blog
 
-class ReportState(TypedDict):
-    topic: str # 보고서 주제    
-    feedback_on_report_plan: str # 보고서 계획에 대한 피드백
-    sections: list[Section] # 보고서 섹션 목록 
-    completed_sections: Annotated[list, operator.add] # Send() API 키
-    report_sections_from_research: str # 최종 섹션을 작성하기 위한 연구 결과로부터의 완성된 섹션 문자열
-    final_report: str # 최종 보고서
+class blogState(TypedDict):
+    topic: str # blog topic    
+    feedback_on_blog_plan: str # Feedback on the blog plan
+    sections: list[Section] # List of blog sections 
+    completed_sections: Annotated[list, operator.add] # Send() API key
+    blog_sections_from_research: str # String of any completed sections from research to write final sections
+    final_blog: str # Final blog
 
 class SectionState(TypedDict):
-    topic: str # 보고서 주제
-    section: Section # 보고서 섹션  
-    search_iterations: int # 수행된 검색 반복 횟수
-    search_queries: list[SearchQuery] # 검색 쿼리 목록
-    source_str: str # 웹 검색에서 형식화된 소스 내용 문자열
-    report_sections_from_research: str # 최종 섹션을 작성하기 위한 연구 결과로부터의 완성된 섹션 문자열
-    completed_sections: list[Section] # Send() API를 위해 외부 상태에 복제하는 최종 키
+    topic: str # blog topic
+    section: Section # blog section  
+    search_iterations: int # Number of search iterations done
+    search_queries: list[SearchQuery] # List of search queries
+    source_str: str # String of formatted source content from web search
+    blog_sections_from_research: str # String of any completed sections from research to write final sections
+    completed_sections: list[Section] # Final key we duplicate in outer state for Send() API
 
 class SectionOutputState(TypedDict):
-    completed_sections: list[Section] # Send() API를 위해 외부 상태에 복제하는 최종 키
+    completed_sections: list[Section] # Final key we duplicate in outer state for Send() API

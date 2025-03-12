@@ -1,88 +1,43 @@
-# src.markdown_to_html_converter.py
+# src/markdown_to_html_converter.py
 """
 마크다운 문서를 HTML로 변환하는 시스템.
 LangChain과 LangGraph를 활용하여 문서 내용을 분석하고 스타일이 적용된 HTML로 변환합니다.
+(개선 버전)
 """
 
 import os
 import re
-from typing import Dict, List, Optional, Any, Tuple, Union, Type
+import json
+from typing import Dict, List, Optional, Any
 from enum import Enum
 from dotenv import load_dotenv
 from typing_extensions import TypedDict
 
+# 마크다운 파싱 라이브러리
+import mistune
+
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langgraph.graph import StateGraph, END
 
-# 환경 변수 로드
+# pydantic (Function Calling을 위한 모델)
+try:
+    from pydantic import BaseModel, Field
+except ImportError:
+    from pydantic.v1 import BaseModel, Field
+
 load_dotenv()
 
-# 스타일 테마 정의
+#################################
+# 1) 테마, 스타일, DocumentState #
+#################################
 class Theme(str, Enum):
-    PURPLE = "purple"  # 보라색 미래 테마
-    GREEN = "green"    # 초록색 자연 테마
-    BLUE = "blue"      # 파란색 전문성 테마
-    ORANGE = "orange"  # 주황색 활력 테마
+    PURPLE = "purple"
+    GREEN = "green"
+    BLUE = "blue"
+    ORANGE = "orange"
 
-# 문서 컴포넌트 정의
-class DocumentComponent(str, Enum):
-    TITLE = "title"
-    SUBTITLE = "subtitle"
-    PARAGRAPH = "paragraph"
-    LIST = "list"
-    TABLE = "table"
-    CODE = "code"
-    QUOTE = "quote"
-    FAQ = "faq"
-    TOC = "toc"
-    IMAGE = "image"
-
-# 문서 분석 결과를 저장할 상태 클래스
-class DocumentState:
-    """문서 처리 상태 정보를 저장하는 클래스"""
-    
-    def __init__(self, markdown_text: str, theme: Optional[Theme] = None):
-        """
-        Args:
-            markdown_text: 변환할 마크다운 텍스트
-            theme: 적용할 테마 (옵션)
-        """
-        self.markdown_text = markdown_text
-        self.theme = theme if theme else Theme.PURPLE  # 기본값은 보라색 테마
-        self.html_output = ""
-        self.document_structure = []
-        self.sections = []
-        self.errors = []
-        self.processing_complete = False
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """상태 객체를 딕셔너리로 변환"""
-        return {
-            "markdown_text": self.markdown_text,
-            "theme": self.theme,
-            "html_output": self.html_output,
-            "document_structure": self.document_structure,
-            "sections": self.sections,
-            "errors": self.errors,
-            "processing_complete": self.processing_complete
-        }
-    
-    @classmethod
-    def from_dict(cls, state_dict: Dict[str, Any]) -> 'DocumentState':
-        """딕셔너리에서 상태 객체 생성"""
-        state = cls(state_dict["markdown_text"], state_dict.get("theme"))
-        state.html_output = state_dict.get("html_output", "")
-        state.document_structure = state_dict.get("document_structure", [])
-        state.sections = state_dict.get("sections", [])
-        state.errors = state_dict.get("errors", [])
-        state.processing_complete = state_dict.get("processing_complete", False)
-        return state
-
-# 테마별 스타일 정의
 THEME_STYLES = {
     Theme.PURPLE: {
         "h1": "font-size: 2.2rem; font-weight: 700; color: #4a148c; margin-top: 1.5em; margin-bottom: 0.8em; line-height: 1.2; border-bottom: 3px solid #7b1fa2; padding-bottom: 0.3em; font-family: 'Noto Sans KR', sans-serif;",
@@ -120,300 +75,295 @@ THEME_STYLES = {
         "accent_color": "#4caf50",
         "accent_bg": "#e8f5e9"
     },
-    # 다른 테마도 필요하면 추가할 수 있습니다
 }
 
-# LLM 초기화 함수
+class DocumentState:
+    def __init__(self, markdown_text: str, theme: Optional[Theme] = None):
+        self.markdown_text = markdown_text
+        self.theme = theme if theme else Theme.PURPLE
+        self.html_output = ""
+        self.document_structure: Dict[str, Any] = {}
+        self.sections: List[Dict[str, Any]] = []
+        self.errors: List[str] = []
+        self.processing_complete = False
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "markdown_text": self.markdown_text,
+            "theme": self.theme,
+            "html_output": self.html_output,
+            "document_structure": self.document_structure,
+            "sections": self.sections,
+            "errors": self.errors,
+            "processing_complete": self.processing_complete,
+        }
+
+    @classmethod
+    def from_dict(cls, state_dict: Dict[str, Any]) -> 'DocumentState':
+        obj = cls(state_dict["markdown_text"], state_dict.get("theme"))
+        obj.html_output = state_dict.get("html_output", "")
+        obj.document_structure = state_dict.get("document_structure", {})
+        obj.sections = state_dict.get("sections", [])
+        obj.errors = state_dict.get("errors", [])
+        obj.processing_complete = state_dict.get("processing_complete", False)
+        return obj
+
+#########################################
+# 2) LLM 초기화 + ThemeOutput (구조화 모델)#
+#########################################
 def get_llm(model_name: str = "gpt-4o-mini", temperature: float = 0.0) -> ChatOpenAI:
-    """
-    LLM 인스턴스를 생성합니다.
-    
-    Args:
-        model_name: 사용할 모델 이름
-        temperature: 온도 파라미터
-        
-    Returns:
-        LLM 인스턴스
-    """
     return ChatOpenAI(
         model=model_name,
         temperature=temperature,
         api_key=os.getenv("OPENAI_API_KEY")
     )
 
-# 마크다운 문서 분석 함수
+class ThemeOutput(BaseModel):
+    recommended_theme: str = Field(..., description="문서에 적합한 테마. purple, green, blue, orange 중 하나")
+
+##################################
+# 3) 로컬 파싱 (mistune) Renderer #
+##################################
+class CustomRenderer(mistune.HTMLRenderer):
+    def __init__(self):
+        super().__init__()
+        self.sections: List[Dict[str, Any]] = []
+        self.section_counter = 0
+
+    def heading(self, text, level):
+        self.section_counter += 1
+        section_id = f"section-{self.section_counter}"
+        self.sections.append({
+            "type": "subtitle" if level > 1 else "title",
+            "content": text,
+            "level": level,
+            "section_id": section_id
+        })
+        return f'<h{level} id="{section_id}">{text}</h{level}>\n'
+
+    def paragraph(self, text):
+        self.section_counter += 1
+        section_id = f"section-{self.section_counter}"
+        self.sections.append({
+            "type": "paragraph",
+            "content": text,
+            "level": 0,
+            "section_id": section_id
+        })
+        return f'<p id="{section_id}">{text}</p>\n'
+
+    def list(self, text, ordered, level, start=None):
+        self.section_counter += 1
+        section_id = f"section-{self.section_counter}"
+        list_type = "ul" if not ordered else "ol"
+        self.sections.append({
+            "type": "list",
+            "content": text,
+            "level": level,
+            "section_id": section_id
+        })
+        return f'<{list_type} id="{section_id}">\n{text}</{list_type}>\n'
+
+    def table(self, header, body):
+        self.section_counter += 1
+        section_id = f"section-{self.section_counter}"
+        self.sections.append({
+            "type": "table",
+            "content": header + body,
+            "level": 0,
+            "section_id": section_id
+        })
+        return f'<table id="{section_id}">\n{header}{body}</table>\n'
+
+    def block_quote(self, text):
+        self.section_counter += 1
+        section_id = f"section-{self.section_counter}"
+        self.sections.append({
+            "type": "quote",
+            "content": text,
+            "level": 0,
+            "section_id": section_id
+        })
+        return f'<blockquote id="{section_id}">{text}</blockquote>\n'
+
+    def block_code(self, code, info=None):
+        self.section_counter += 1
+        section_id = f"section-{self.section_counter}"
+        self.sections.append({
+            "type": "code",
+            "content": code,
+            "level": 0,
+            "section_id": section_id
+        })
+        language = info or ""
+        return f'<pre id="{section_id}"><code class="language-{language}">{code}</code></pre>\n'
+
+def parse_markdown_locally(markdown_text: str) -> List[Dict[str, Any]]:
+    renderer = CustomRenderer()
+    parser = mistune.create_markdown(renderer=renderer)
+    _ = parser(markdown_text)
+    return renderer.sections
+
+##########################################
+# 4) analyze_document_structure (수정됨) #
+##########################################
 def analyze_document_structure(state: Dict[str, Any]) -> Dict[str, Any]:
     """
-    마크다운 문서의 구조를 분석합니다.
-    
-    Args:
-        state: 문서 처리 상태
-        
-    Returns:
-        업데이트된 상태
+    1) 로컬 파싱으로 섹션 생성
+    2) LLM으로부터 recommended_theme만 안전하게 받아온다 (structured output)
+    3) 파싱 실패하면 theme=purple로 fallback
     """
     doc_state = DocumentState.from_dict(state)
-    markdown_text = doc_state.markdown_text
-    
-    # LLM을 사용하여 문서 구조 분석
+
+    # (1) 로컬 파싱
+    sections = parse_markdown_locally(doc_state.markdown_text)
+    doc_state.sections = sections
+
+    # (2) LLM으로부터 recommended_theme만 받아오기
     llm = get_llm()
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """당신은 마크다운 문서를 HTML로 변환하는 전문가입니다.
-        주어진 마크다운 문서를 분석하여 구조를 파악하세요.
-        문서 내의 섹션, 제목, 부제목, 목차, 단락, 리스트, 표, 코드 블록, 인용구 등을 식별하세요.
-        자유로운 섹션 갯수와 적절한 태그 변환이 필요합니다.
-        
-        다음과 같은 컴포넌트를 식별하세요:
-        - 제목 (title): 문서의 메인 제목
-        - 부제목 (subtitle): 섹션 및 하위 섹션 제목
-        - 단락 (paragraph): 일반 텍스트 단락
-        - 리스트 (list): 순서가 있는/없는 리스트
-        - 표 (table): 데이터 표
-        - 코드 (code): 코드 블록
-        - 인용구 (quote): 인용문
-        - FAQ (faq): 질문과 답변 형식
-        - 목차 (toc): 문서 목차
-        - 이미지 (image): 이미지
-        
-        전체 문서를 이해하고 다음 형식의 JSON으로 응답하세요:
-        {{
-          "document_title": "문서 제목",
-          "sections": [
-            {{
-              "type": "컴포넌트 유형",
-              "content": "원본 마크다운 내용",
-              "level": 레벨(제목의 경우 1-6),
-              "section_id": "섹션 ID(목차 링크용)"
-            }}
-          ],
-          "recommended_theme": "추천 테마(purple, green, blue, orange 중 하나)",
-          "has_toc": true/false,
-          "has_faq": true/false
-        }}
-        
-        추천 테마는 문서 내용의 성격(기술 문서, 자연 관련, 비즈니스 등)을 고려하여 선택하세요.
-        문서에 명시적인 목차가 없어도 목차가 필요한지 판단하세요.
-        """),
+    # structured output을 지원하는 chain 생성
+    #   method="function_calling" 반드시 지정
+    theme_prompt = ChatPromptTemplate.from_messages([
+        ("system", """당신은 마크다운 분석 전문가입니다.
+문서 내용(한국어)과 전반적 분위기를 보고, purple/green/blue/orange 중 하나를 추천하세요.
+
+출력 예:
+{
+  "recommended_theme": "purple"
+}
+
+절대 다른 key를 넣지 말고 recommended_theme만 넣으세요.
+"""),
         ("human", "{markdown_text}")
     ])
     
-    chain = prompt | llm
-    response = chain.invoke({"markdown_text": markdown_text})
-    
-    # 응답에서 JSON 추출
-    result_str = response.content
-    # JSON 문자열 추출 (프롬프트에서 JSON 형식으로 응답하도록 요청했으므로)
-    json_match = re.search(r'```json\s*(.*?)\s*```', result_str, re.DOTALL)
-    if json_match:
-        result_str = json_match.group(1)
-    else:
-        # ```json 블록이 없는 경우 중괄호로 둘러싸인 부분 찾기
-        json_match = re.search(r'({.*})', result_str, re.DOTALL)
-        if json_match:
-            result_str = json_match.group(1)
-    
-    import json
+    # with_structured_output(ThemeOutput)으로 안전 파싱
+    chain = theme_prompt | llm.with_structured_output(ThemeOutput, method="function_calling")
     try:
-        result = json.loads(result_str)
-        doc_state.document_structure = result
-        
-        # 추천 테마가 있으면 설정
-        if "recommended_theme" in result:
-            recommended_theme = result["recommended_theme"].lower()
-            if recommended_theme in [t.value for t in Theme]:
-                doc_state.theme = Theme(recommended_theme)
-        
-        # 섹션 정보 설정
-        if "sections" in result:
-            doc_state.sections = result["sections"]
-    except json.JSONDecodeError as e:
-        doc_state.errors.append(f"JSON 파싱 오류: {str(e)}")
-        # 분석 실패시 기본 섹션으로 전체 문서 설정
-        doc_state.sections = [{
-            "type": "paragraph",
-            "content": markdown_text,
-            "level": 0,
-            "section_id": "content"
-        }]
-    
+        result = chain.invoke({"markdown_text": doc_state.markdown_text})
+        theme_str = result.recommended_theme.lower().strip()
+        if theme_str in [t.value for t in Theme]:
+            doc_state.theme = Theme(theme_str)
+    except Exception as e:
+        doc_state.errors.append(f"테마 분석 실패: {str(e)}")
+        # fallback
+        doc_state.theme = Theme.PURPLE
+
     return doc_state.to_dict()
 
-# 섹션별 HTML 변환 함수
+#############################
+# 5) 섹션별 HTML 변환 함수 #
+#############################
 def convert_section_to_html(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    각 섹션을 HTML로 변환합니다.
-    
-    Args:
-        state: 문서 처리 상태
-        
-    Returns:
-        업데이트된 상태
-    """
     doc_state = DocumentState.from_dict(state)
     sections = doc_state.sections
     theme = doc_state.theme
     theme_styles = THEME_STYLES.get(theme, THEME_STYLES[Theme.PURPLE])
-    
-    llm = get_llm()
-    
-    # 테마 스타일을 문자열로 변환
-    theme_styles_str = "\n".join([f"{k}: {v}" for k, v in theme_styles.items()])
-    
-    all_html_sections = []
-    
-    # 각 섹션을 HTML로 변환
-    for section in sections:
-        section_type = section.get("type", "paragraph")
-        content = section.get("content", "")
-        level = section.get("level", 0)
-        section_id = section.get("section_id", "")
-        
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", f"""당신은 마크다운을 HTML로 변환하는 전문가입니다.
-            주어진 마크다운 섹션을 HTML로 변환하세요. 다음 스타일 정보를 참고하세요:
-            
-            테마: {theme.value}
-            
-            스타일 정보:
-            {theme_styles_str}
-            
-            섹션 유형: {section_type}
-            레벨(있는 경우): {level}
-            섹션 ID(있는 경우): {section_id}
-            
-            다음 규칙을 따르세요:
-            1. 마크다운 텍스트를 완전한 HTML로 변환하세요.
-            2. 제목(#)은 적절한 h1-h6 태그와 스타일로 변환하세요.
-            3. 단락은 p 태그와 스타일로 변환하세요.
-            4. 리스트는 ol/ul/li 태그와 스타일로 변환하세요.
-            5. 표는 table/thead/tbody/tr/th/td 태그와 스타일로 변환하세요.
-            6. 코드 블록은 pre/code 태그와 스타일로 변환하세요.
-            7. 인용구는 blockquote 태그와 스타일로 변환하세요.
-            8. 강조는 strong 또는 b 태그와 스타일로 변환하세요.
-            9. 이미지는 img 태그와 스타일로 변환하세요.
-            10. 링크는 a 태그와 스타일로 변환하세요.
-            11. 섹션 ID가 있는 경우 해당 HTML 요소에 id 속성을 추가하세요.
-            
-            HTML 태그와 스타일 속성만 반환하세요. 설명이나 주석은 필요하지 않습니다.
-            """),
-            ("human", "{content}")
-        ])
-        
-        chain = prompt | llm
-        response = chain.invoke({"content": content})
-        
-        html_section = response.content.strip()
-        # HTML 태그만 추출하기 위해 필요하면 처리
-        if html_section.startswith('```html'):
-            html_section = re.search(r'```html\s*(.*?)\s*```', html_section, re.DOTALL).group(1)
-        elif html_section.startswith('<'):
-            # 이미 HTML 태그로 시작하면 그대로 사용
-            pass
+
+    html_output_list = []
+
+    for sec in sections:
+        s_type = sec.get("type", "paragraph")
+        s_content = sec.get("content", "")
+        level = sec.get("level", 0)
+        s_id = sec.get("section_id", "")
+
+        if s_type in ["title", "subtitle"]:
+            tag = f"h{level}" if 1 <= level <= 6 else "h2"
+            style_key = f"h{level}" if f"h{level}" in theme_styles else "h2"
+            html_piece = f'<{tag} id="{s_id}" style="{theme_styles[style_key]}">{s_content}</{tag}>'
+        elif s_type == "paragraph":
+            html_piece = f'<p id="{s_id}" style="{theme_styles["p"]}">{s_content}</p>'
+        elif s_type == "list":
+            html_piece = f'<ul id="{s_id}">{s_content}</ul>'
+        elif s_type == "code":
+            html_piece = f'''
+<pre id="{s_id}" style="background: #f5f2ff; padding: 1em;">
+<code>{s_content}</code>
+</pre>
+'''
+        elif s_type == "table":
+            html_piece = f'<table id="{s_id}" style="border-collapse: collapse; margin-bottom: 1em;">{s_content}</table>'
+        elif s_type == "quote":
+            html_piece = f'<blockquote id="{s_id}" style="{theme_styles["blockquote"]}">{s_content}</blockquote>'
         else:
-            # 기본 단락으로 처리
-            html_section = f'<p style="{theme_styles["p"]}">{html_section}</p>'
-        
-        all_html_sections.append(html_section)
-    
-    # 모든 섹션 HTML 합치기
-    doc_state.html_output = "\n".join(all_html_sections)
-    
+            html_piece = f'<p id="{s_id}" style="{theme_styles["p"]}">{s_content}</p>'
+
+        html_output_list.append(html_piece)
+
+    doc_state.html_output = "\n".join(html_output_list)
     return doc_state.to_dict()
-# 목차 생성 함수 수정 (불필요한 항목 필터링 및 TOC 삽입 위치 조정)
+
+##########################
+# 6) 목차(Toc) 항상 생성 #
+##########################
 def generate_toc(state: Dict[str, Any]) -> Dict[str, Any]:
     """
-    문서 구조에 기반하여 목차를 생성합니다.
-    
-    Args:
-        state: 문서 처리 상태
-        
-    Returns:
-        업데이트된 상태
+    FAQ, TOC는 항상 사용한다고 가정 -> has_toc가 없어도 무조건 TOC 생성
     """
     doc_state = DocumentState.from_dict(state)
-    document_structure = doc_state.document_structure
+    theme_styles = THEME_STYLES.get(doc_state.theme, THEME_STYLES[Theme.PURPLE])
+    sections = doc_state.sections
 
-    if not document_structure or "sections" not in document_structure:
-        return state
-
-    has_toc = document_structure.get("has_toc", False)
-    if not has_toc:
-        return state
-
+    # h1~h3만 목차 수집
     toc_items = []
     seen_titles = set()
-    # Conclusion 섹션은 마지막 항목만 TOC에 포함하도록 처리
-    conclusion_indices = [i for i, s in enumerate(document_structure["sections"]) 
-                          if s.get("content", "").strip().lower() == "conclusion"]
-    last_conclusion_index = max(conclusion_indices) if conclusion_indices else None
-
-    for i, section in enumerate(document_structure["sections"]):
-        if section.get("type") in ["title", "subtitle"] and section.get("level", 0) <= 3:
-            title_text = re.sub(r'^#+\s+', '', section.get("content", "").strip())
-            # 불필요한 항목 필터링: 'Sources' (또는 '출처')는 제외
-            if title_text.lower() in ["sources", "출처"]:
+    for sec in sections:
+        if sec["type"] in ["title", "subtitle"]:
+            lvl = sec["level"] if sec["level"] else 1
+            if lvl > 3:
                 continue
-            # Conclusion은 마지막 항목만 포함
-            if title_text.lower() == "conclusion":
-                if last_conclusion_index is not None and i != last_conclusion_index:
-                    continue
-            # 동일 제목이 중복되는 경우 한 번만 포함
-            if title_text in seen_titles:
-                continue
-            seen_titles.add(title_text)
-            section_id = section.get("section_id", "")
-            if section_id:
+            text = sec["content"].strip()
+            if text not in seen_titles:
                 toc_items.append({
-                    "title": title_text,
-                    "id": section_id,
-                    "level": section.get("level", 1)
+                    "title": text,
+                    "id": sec["section_id"],
+                    "level": lvl
                 })
+                seen_titles.add(text)
 
-    if toc_items:
-        theme = doc_state.theme
-        theme_styles = THEME_STYLES.get(theme, THEME_STYLES[Theme.PURPLE])
-        toc_html = f'<div style="{theme_styles["toc"]}">\n'
-        toc_html += f'  <div style="margin-bottom: 15px;">\n'
-        toc_html += f'    <h3 style="{theme_styles["toc_title"]}">목차</h3>\n'
-        toc_html += f'  </div>\n'
-        toc_html += f'  <div style="display: flex; flex-direction: column; gap: 10px;">\n'
-        for item in toc_items:
-            indent = "    " * (item["level"] - 1) if item["level"] > 1 else ""
-            toc_html += f'{indent}    <a href="#{item["id"]}" style="{theme_styles["toc_link"]}">{item["title"]}</a>\n'
-        toc_html += f'  </div>\n'
-        toc_html += f'</div>\n'
+    if not toc_items:
+        return doc_state.to_dict()
 
-        # TOC를 문서의 첫 번째 h1 이후, 그리고 첫 번째 h2 태그 바로 전(있으면) 위치에 삽입
-        html_output = doc_state.html_output
-        pos_h1 = html_output.find("</h1>")
-        pos_h2 = html_output.find("<h2", pos_h1 + len("</h1>")) if pos_h1 != -1 else -1
+    toc_html = f'<div style="{theme_styles["toc"]}">\n'
+    toc_html += f'  <div style="margin-bottom: 15px;">\n'
+    toc_html += f'    <h3 style="{theme_styles["toc_title"]}">목차</h3>\n'
+    toc_html += f'  </div>\n'
+    toc_html += f'  <div style="display: flex; flex-direction: column; gap: 10px;">\n'
+    for item in toc_items:
+        indent = "  " * (item["level"] - 1) if item["level"] > 1 else ""
+        toc_html += f'{indent}<a href="#{item["id"]}" style="{theme_styles["toc_link"]}">{item["title"]}</a>\n'
+    toc_html += f'  </div>\n'
+    toc_html += f'</div>\n'
+
+    # h1 뒤, 또는 문서 맨 앞
+    html_output = doc_state.html_output
+    pos_h1_end = html_output.find("</h1>")
+    if pos_h1_end != -1:
+        pos_h2 = html_output.find("<h2", pos_h1_end)
         if pos_h2 != -1:
             new_html = html_output[:pos_h2] + toc_html + html_output[pos_h2:]
-        elif pos_h1 != -1:
-            new_html = html_output[:pos_h1+len("</h1>")] + toc_html + html_output[pos_h1+len("</h1>"):]
         else:
-            new_html = toc_html + html_output
+            new_html = html_output[:pos_h1_end+5] + toc_html + html_output[pos_h1_end+5:]
         doc_state.html_output = new_html
+    else:
+        doc_state.html_output = toc_html + "\n" + html_output
 
     return doc_state.to_dict()
 
-# 최종 검토 및 수정 함수 수정 (중복 Conclusion 섹션 제거 지침 추가)
+###########################################
+# 7) 최종 검토(Conclusion 중복 등) 항상 FAQ #
+###########################################
 def final_review(state: Dict[str, Any]) -> Dict[str, Any]:
     """
-    최종 HTML 출력을 검토하고 수정합니다.
-    
-    Args:
-        state: 문서 처리 상태
-        
-    Returns:
-        업데이트된 상태
+    최종 HTML 코드 검토 (결론 중복 제거 등)
+    FAQ도 무조건 포함된다고 가정 -> 별도 로직 없음
     """
     doc_state = DocumentState.from_dict(state)
     html_output = doc_state.html_output
 
     llm = get_llm()
-
     prompt = ChatPromptTemplate.from_messages([
         ("system", """당신은 HTML 코드 검토 전문가입니다.
 다음 HTML 코드를 검토하고 필요한 경우 수정하세요.
@@ -423,133 +373,72 @@ def final_review(state: Dict[str, Any]) -> Dict[str, Any]:
 2. 모든 style 속성이 올바른 형식인지
 3. id 속성이 적절하게 사용되었는지
 4. 전체적인 구조가 일관되고 가독성이 좋은지
-5. 'Conclusion' 섹션이 문서 마지막에 단 한 번만 등장하도록 하세요. 중복된 'Conclusion' 섹션이 있다면 이를 통합하거나 제거하세요.
+5. 'Conclusion', '결론', '마무리' 등 결론이 중복이면 하나만 남기세요.
 
-수정한 완전한 HTML 코드만 반환하세요. 설명이나 주석은 필요하지 않습니다.
+수정한 완전한 HTML 코드만 반환하세요. 다른 설명이나 주석은 넣지 마세요.
         """),
         ("human", "{html}")
     ])
-
     chain = prompt | llm
     response = chain.invoke({"html": html_output})
 
-    # 검토된 HTML로 업데이트
     doc_state.html_output = response.content.strip()
     doc_state.processing_complete = True
-
     return doc_state.to_dict()
 
-
-# 워크플로우 그래프 설정
+##########################
+# 8) 워크플로우 구성/실행 #
+##########################
 def create_markdown_to_html_graph() -> StateGraph:
-    """
-    마크다운을 HTML로 변환하는 워크플로우 그래프를 생성합니다.
-    
-    Returns:
-        StateGraph: 워크플로우 그래프
-    """
-    # 상태 스키마 정의
     class WorkflowState(TypedDict):
         markdown_text: str
-        theme: Optional[str]
+        theme: Optional[Theme]
         html_output: str
-        document_structure: List[Dict[str, Any]]
+        document_structure: Dict[str, Any]
         sections: List[Dict[str, Any]]
         errors: List[str]
         processing_complete: bool
-    
+
     workflow = StateGraph(WorkflowState)
-    
-    # 노드 추가
     workflow.add_node("analyze_document", analyze_document_structure)
     workflow.add_node("convert_section", convert_section_to_html)
     workflow.add_node("generate_toc", generate_toc)
     workflow.add_node("final_review", final_review)
-    
-    # 엣지 추가
+
     workflow.set_entry_point("analyze_document")
     workflow.add_edge("analyze_document", "convert_section")
     workflow.add_edge("convert_section", "generate_toc")
     workflow.add_edge("generate_toc", "final_review")
     workflow.add_edge("final_review", END)
-    
     return workflow.compile()
 
-# 마크다운을 HTML로 변환하는 메인 함수
 def convert_markdown_to_html(markdown_text: str, theme: Optional[Theme] = None) -> str:
-    """
-    마크다운 텍스트를 HTML로 변환합니다.
-    
-    Args:
-        markdown_text: 변환할 마크다운 텍스트
-        theme: 사용할 테마 (없으면 내용 기반으로 선택)
-        
-    Returns:
-        변환된 HTML 코드
-    """
-    # 초기 상태 설정
-    initial_state = DocumentState(markdown_text, theme).to_dict()
-    
-    # 워크플로우 그래프 생성
+    doc_state = DocumentState(markdown_text, theme)
+    initial_state = doc_state.to_dict()
+
     graph = create_markdown_to_html_graph()
-    
-    # 워크플로우 실행
     final_state = graph.invoke(initial_state)
-    
-    # 결과 반환
+
     return final_state["html_output"]
 
-# 실행 예시
+#######################
+# 9) 실행 예시 (테스트)#
+#######################
 if __name__ == "__main__":
-    # 예시 마크다운 텍스트
-    sample_markdown = """# 파이썬 데이터 분석 기초
-    
+    sample_markdown = """# 예시 문서 타이틀
+
 ## 소개
-파이썬은 데이터 분석을 위한 강력한 도구입니다. 다양한 라이브러리를 활용하여 데이터를 효과적으로 처리할 수 있습니다.
+이 문서는 LangChain과 Python 라이브러리를 활용해
+마크다운을 HTML로 변환하는 예시입니다.
 
-### 필요한 라이브러리
-- pandas: 데이터 처리 및 분석
-- numpy: 수치 계산
-- matplotlib: 데이터 시각화
-- seaborn: 고급 데이터 시각화
+## 결론
+이건 첫 번째 결론
 
-## 데이터 불러오기
-```python
-import pandas as pd
-import numpy as np
+## 결론
+이건 두 번째 결론 (중복)
 
-# CSV 파일 불러오기
-df = pd.read_csv('data.csv')
-print(df.head())
-```
-
-## 데이터 전처리
-데이터 전처리는 분석 과정에서 매우 중요한 단계입니다.
-
-### 결측치 처리
-결측치는 분석 결과에 영향을 줄 수 있으므로 적절히 처리해야 합니다.
-
-| 방법 | 장점 | 단점 |
-|------|------|------|
-| 삭제 | 간단함 | 데이터 손실 |
-| 평균값 대체 | 데이터 보존 | 분포 변화 |
-| 예측값 대체 | 정확도 높음 | 복잡함 |
-
-> 데이터의 특성에 따라 적절한 방법을 선택해야 합니다.
-
-## FAQ
-
-### Q: 파이썬으로 할 수 있는 데이터 분석은 무엇인가요?
-A: 파이썬은 데이터 정제, 변환, 시각화, 모델링 등 다양한 데이터 분석 작업을 수행할 수 있습니다.
-
-### Q: 초보자가 배우기 쉬운 라이브러리는 무엇인가요?
-A: pandas와 matplotlib이 초보자에게 추천되는 라이브러리입니다. 직관적인 API와 풍부한 문서를 제공합니다.
 """
-    
-    # 변환 실행
-    html_output = convert_markdown_to_html(sample_markdown)
-    print(html_output)
-    
-    # 결과를 파일로 저장
+    html_result = convert_markdown_to_html(sample_markdown)
+    print(html_result)
     with open("output.html", "w", encoding="utf-8") as f:
-        f.write(html_output) 
+        f.write(html_result)
