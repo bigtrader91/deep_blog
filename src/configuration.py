@@ -18,12 +18,9 @@ DEFAULT_blog_STRUCTURE = """Use the following structure to write a blog post (An
    - Write at least 200 characters per section.
    - Include a table in the second and fifth sections.
    - Include a list in the third and sixth sections.
-   - Include Q&A in the seventh section.
-   - Q&A should be in the following format:
-        ### Q: question?
-        A: answer
-        ### Q: question?
-        A: answer
+   - Include FAQ in the seventh section.
+   - FAQ should be in the following format:
+
 
 3. Conclusion
    - Summarize the key message from the main content naturally.

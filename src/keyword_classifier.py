@@ -1,8 +1,7 @@
 # src/keyword_classifier.py
 
 import os
-import urllib.request
-import urllib.parse
+
 import json
 from typing import Dict, List, TypedDict, Any, Optional
 from dotenv import load_dotenv
@@ -14,10 +13,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 
+from src.utils import naver_search
 load_dotenv()  # .env에서 NAVER_CLIENT_ID, NAVER_CLIENT_SECRET 로드
 
-CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
-CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
 
 # --------------------
 # 1) TypedDict 정의
@@ -33,31 +31,6 @@ class KeywordType(TypedDict):
 # --------------------
 # 2) 네이버 쇼핑 검색 함수
 # --------------------
-def naver_search(query: str, search_type: str = "shop") -> Dict[str, Any]:
-    """
-    네이버 API를 사용하여 검색 결과를 가져옵니다.
-    """
-    if not CLIENT_ID or not CLIENT_SECRET:
-        raise ValueError("NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET을 환경 변수에 설정해야 합니다.")
-    
-    enc_text = urllib.parse.quote(query)
-    url = f"https://openapi.naver.com/v1/search/{search_type}.json?query={enc_text}"
-    
-    request = urllib.request.Request(url)
-    request.add_header("X-Naver-Client-Id", CLIENT_ID)
-    request.add_header("X-Naver-Client-Secret", CLIENT_SECRET)
-    
-    try:
-        response = urllib.request.urlopen(request)
-        rescode = response.getcode()
-        if rescode == 200:
-            return json.loads(response.read().decode('utf-8'))
-        else:
-            print("Error Code:", rescode)
-            return {}
-    except Exception as e:
-        print("검색 중 예외 발생:", e)
-        return {}
 
 # --------------------
 # 3) 브랜드 일관성 분석
