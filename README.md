@@ -579,3 +579,129 @@ python src/test_header_image.py      # 상단 이미지가 있는 카드 다이�
 ## 라이선스
 
 MIT
+
+# 네이버 지식인 API
+
+네이버 지식인에서 질문과 답변을 스크래핑하기 위한 Python API입니다. Selenium을 사용하여 동적으로 로드되는 콘텐츠를 처리하고, 헤드리스 모드를 지원합니다.
+
+## 기능
+
+- 네이버 지식인 URL에서 질문과 답변 스크래핑
+- 채택된 답변 식별
+- 답변자 등급 추출
+- 헤드리스 모드 지원 (브라우저 창이 열리지 않음)
+- 다양한 출력 형식 지원 (JSON, 예쁘게 포맷팅된 텍스트, 단순 텍스트)
+- 명령행 인터페이스 제공
+
+## 설치 방법
+
+### 필수 조건
+
+- Python 3.9 이상
+- Chrome 웹 브라우저
+
+### 패키지 설치
+
+```bash
+pip install -r requirements.txt
+```
+
+## 사용 방법
+
+### Python 코드에서 사용
+
+```python
+from naver_kin_api import NaverKinAPI, FormatterLoader
+
+# API 인스턴스 생성 (헤드리스 모드)
+api = NaverKinAPI(headless=True)
+
+try:
+    # URL에서 질문과 답변 가져오기
+    url = "https://kin.naver.com/qna/detail.naver?d1id=11&dirId=1111&docId=12345"
+    content = api.get_content(url)
+    
+    # 결과 출력
+    formatter = FormatterLoader().load("pretty")
+    print(formatter.format_content(content))
+    
+    # 채택된 답변만 추출
+    if content.has_adopted_answer():
+        adopted_answer = content.get_adopted_answer()
+        print(f"채택된 답변: {adopted_answer.content}")
+    
+    # 검색 기능 사용
+    search_results = api.search("골절 통증 치료", limit=3)
+    for result in search_results:
+        print(f"제목: {result.question.title}")
+        print(f"URL: {result.url}")
+        print("-" * 30)
+finally:
+    # 브라우저 정리
+    api.close()
+```
+
+### 명령행 인터페이스로 사용
+
+URL에서 질문과 답변 가져오기:
+
+```bash
+python sample_usage.py get https://kin.naver.com/qna/detail.naver?d1id=11&dirId=1111&docId=12345
+```
+
+검색 기능 사용:
+
+```bash
+python sample_usage.py search "골절 통증 치료" --limit 5
+```
+
+JSON 형식으로 출력:
+
+```bash
+python sample_usage.py get https://kin.naver.com/qna/detail.naver?d1id=11&dirId=1111&docId=12345 --format json
+```
+
+결과를 파일로 저장:
+
+```bash
+python sample_usage.py search "골절 통증 치료" --output results.txt
+```
+
+## API 참조
+
+### `NaverKinAPI` 클래스
+
+네이버 지식인 API의 주요 클래스입니다.
+
+#### 생성자
+
+```python
+NaverKinAPI(headless=True, timeout=30)
+```
+
+- `headless`: 헤드리스 모드 여부 (기본값: True)
+- `timeout`: 페이지 로딩 타임아웃 (초 단위, 기본값: 30)
+
+#### 메서드
+
+- `get_content(url)`: URL에서 질문과 답변 가져오기
+- `get_question(url)`: URL에서 질문만 가져오기
+- `get_answers(url)`: URL에서 답변만 가져오기
+- `search(query, limit=5)`: 검색 기능
+- `close()`: 브라우저 정리
+
+### 데이터 모델
+
+- `KinQuestion`: 질문 데이터 모델
+- `KinAnswer`: 답변 데이터 모델
+- `KinContent`: 질문과 답변을 포함하는 데이터 모델
+
+### 포매터
+
+- `PrettyFormatter`: 가독성 좋은 텍스트 형식으로 출력
+- `JSONFormatter`: JSON 형식으로 출력
+- `TextFormatter`: 단순 텍스트 형식으로 출력
+
+## License
+
+MIT

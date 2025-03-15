@@ -2,7 +2,11 @@
 import os
 import asyncio
 import requests
+import urllib.request
+import urllib.parse
+import json
 from typing import List, Optional, Dict, Any
+import random
 
 from exa_py import Exa
 from linkup import LinkupClient
@@ -13,6 +17,151 @@ from langchain_community.utilities.pubmed import PubMedAPIWrapper
 from langsmith import traceable
 
 from src.state import Section
+from src.data_crawler import NaverCrawler  # 이 줄 추가
+CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
+CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
+
+
+def naver_search(query: str, search_type: str = "shop") -> Dict[str, Any]:
+    """
+    네이버 API를 사용하여 검색 결과를 가져옵니다.
+    """
+    if not CLIENT_ID or not CLIENT_SECRET:
+        raise ValueError("NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET을 환경 변수에 설정해야 합니다.")
+    
+    enc_text = urllib.parse.quote(query)
+    url = f"https://openapi.naver.com/v1/search/{search_type}.json?query={enc_text}"
+    
+    request = urllib.request.Request(url)
+    request.add_header("X-Naver-Client-Id", CLIENT_ID)
+    request.add_header("X-Naver-Client-Secret", CLIENT_SECRET)
+    
+    try:
+        response = urllib.request.urlopen(request)
+        rescode = response.getcode()
+        if rescode == 200:
+            return json.loads(response.read().decode('utf-8'))
+        else:
+            print("Error Code:", rescode)
+            return {}
+    except Exception as e:
+        print("검색 중 예외 발생:", e)
+        return {}
+
+
+def fetch_naver_content(url: str) -> Dict[str, str]:
+    """
+    네이버 웹페이지의 내용을 스크래핑하여 추출합니다.
+    
+    Args:
+        url (str): 스크래핑할 네이버 URL
+        
+    Returns:
+        Dict[str, str]: 추출된 내용 (제목, 본문 등)
+        
+    Raises:
+        ImportError: 필요한 라이브러리가 설치되어 있지 않은 경우
+        Exception: 웹페이지 접근 또는 파싱 과정에서 오류가 발생한 경우
+    """
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+    except ImportError:
+        raise ImportError("requests와 beautifulsoup4 패키지를 설치해야 합니다. pip install requests beautifulsoup4")
+    
+    try:
+        # User-Agent 설정
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        # 웹페이지 요청
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # 에러 발생 시 예외 발생
+        
+        # 인코딩 확인 및 설정
+        if response.encoding.lower() != 'utf-8':
+            response.encoding = 'utf-8'
+        
+        # BeautifulSoup으로 파싱
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # 결과 저장 딕셔너리
+        content = {
+            'url': url,
+            'title': '',
+            'content': '',
+            'error': None
+        }
+        
+        # 네이버 지식IN의 경우
+        if 'kin.naver.com' in url:
+            title_element = soup.select_one('.title')
+            question_element = soup.select_one('.c-heading__content')
+            answer_element = soup.select_one('.se-main-container')
+            
+            # 답변자 정보와 채택 여부 확인
+            is_adopted = False
+            answerer_grade = None
+            
+            # 채택 답변 확인
+            adoption_element = soup.select_one('.badge__adoption')
+            if adoption_element:
+                is_adopted = True
+            
+            # 답변자 등급 확인
+            # 등급은 일반적으로 프로필 이미지 옆이나 닉네임 근처에 표시됨
+            answerer_info = soup.select_one('.c-userinfo__author') or soup.select_one('.answer-author')
+            if answerer_info:
+                grade_element = answerer_info.select_one('.grade') or answerer_info.select_one('.badge')
+                if grade_element:
+                    answerer_grade = grade_element.get_text(strip=True)
+                
+                # 답변자 이름도 추출
+                name_element = answerer_info.select_one('.c-userinfo__author-name') or answerer_info
+                if name_element:
+                    content['answerer_name'] = name_element.get_text(strip=True)
+            
+            # 채택 여부와 등급 정보 저장
+            content['is_adopted'] = is_adopted
+            content['answerer_grade'] = answerer_grade
+            
+            if title_element:
+                content['title'] = title_element.get_text(strip=True)
+            
+            if question_element:
+                content['question'] = question_element.get_text(strip=True)
+            
+            if answer_element:
+                content['answer'] = answer_element.get_text(strip=True)
+                content['content'] = content['answer']
+        
+        # 네이버 뉴스의 경우
+        elif 'news.naver.com' in url:
+            title_element = soup.select_one('#title_area') or soup.select_one('.media_end_head_headline')
+            content_element = soup.select_one('#newsct_article') or soup.select_one('#dic_area')
+            
+            if title_element:
+                content['title'] = title_element.get_text(strip=True)
+            
+            if content_element:
+                content['content'] = content_element.get_text(strip=True)
+        
+
+        
+
+        
+        # 내용이 없으면 에러 메시지 추가
+        if not content['content']:
+            content['error'] = '내용을 추출할 수 없습니다. 페이지 구조가 변경되었거나 접근이 제한된 페이지일 수 있습니다.'
+        
+        return content
+    
+    except requests.exceptions.RequestException as e:
+        return {'url': url, 'title': '', 'content': '', 'error': f'요청 오류: {str(e)}'}
+    except Exception as e:
+        return {'url': url, 'title': '', 'content': '', 'error': f'스크래핑 오류: {str(e)}'}
+
 
 def get_config_value(value):
     """
@@ -39,6 +188,7 @@ def get_search_params(search_api: str, search_api_config: Optional[Dict[str, Any
         "arxiv": ["load_max_docs", "get_full_documents", "load_all_available_meta"],
         "pubmed": ["top_k_results", "email", "api_key", "doc_content_chars_max"],
         "linkup": ["depth"],
+        "data_crawler": ["display", "include_google", "max_content_length", "max_results"],  # 매개변수 추가
     }
 
     # Get the list of accepted parameters for the given search API
@@ -510,7 +660,7 @@ async def arxiv_search_async(search_queries, load_max_docs=5, get_full_documents
             results = []
             # Assign decreasing scores based on the order
             base_score = 1.0
-            score_decrement = 1.0 / (len(docs) + 1) if docs else 0
+            score_decrement = 1.0 / (len(docs) + 1 if docs else 1)  # 0 대신 1 사용
             
             for i, doc in enumerate(docs):
                 # Extract metadata
@@ -675,7 +825,7 @@ async def pubmed_search_async(search_queries, top_k_results=5, email=None, api_k
             results = []
             # Assign decreasing scores based on the order
             base_score = 1.0
-            score_decrement = 1.0 / (len(docs) + 1) if docs else 0
+            score_decrement = 1.0 / (len(docs) + 1 if docs else 1)  # 0 대신 1 사용
             
             for i, doc in enumerate(docs):
                 # Format content with metadata
@@ -814,6 +964,159 @@ async def linkup_search(search_queries, depth: Optional[str] = "standard"):
 
     return search_results
 
+@traceable
+async def data_crawler_search(search_queries, display: int = 2, include_google: bool = False, 
+                             max_content_length: int = 1000, max_results: int = 5):
+    """
+    네이버 API와 웹 크롤링을 사용하여 검색을 수행합니다.
+    필요한 경우 구글 뉴스 결과도 포함합니다.
+    
+    Args:
+        search_queries (List[str]): 처리할 검색 쿼리 목록
+        display (int, optional): 각 소스별 검색 결과 개수. 기본값은 2.
+        include_google (bool, optional): 구글 뉴스 데이터 포함 여부. 기본값은 False.
+        max_content_length (int, optional): 최대 콘텐츠 길이. 기본값은 1000자.
+        max_results (int, optional): 모든 소스에서 반환할 최대 결과 개수. 기본값은 5.
+        
+    Returns:
+        List[dict]: 네이버(및 선택적으로 구글) 검색 결과 목록
+    """
+    crawler = NaverCrawler()
+    
+    search_docs = []
+    
+    for i, query in enumerate(search_queries):
+        try:
+            # 재시도 로직 추가 (최대 3번 시도)
+            retry_count = 0
+            max_retries = 3
+            success = False
+            
+            while retry_count < max_retries and not success:
+                try:
+                    # 추가 딜레이 - 첫 쿼리는 딜레이 없이, 이후 쿼리는 2-7초 딜레이
+                    if i > 0 or retry_count > 0:
+                        await asyncio.sleep(random.uniform(2.0, 7.0))
+                    
+                    # max_total_results 매개변수 추가
+                    results = await crawler.crawl_all(query, display, include_google, max_total_results=max_results)
+                    success = True
+                except Exception as e:
+                    retry_count += 1
+                    print(f"네이버 검색 쿼리 '{query}' 처리 중 오류 발생 (시도 {retry_count}/{max_retries}): {str(e)}")
+                    if retry_count >= max_retries:
+                        raise
+                    # 재시도 전 딜레이 증가
+                    await asyncio.sleep(random.uniform(3.0, 10.0))
+            
+            # 성공한 경우에만 결과 처리
+            if success:
+                # 모든 소스의 결과를 합칩니다
+                all_results = []
+                
+                # 최대 결과 개수 카운터
+                result_count = 0
+                
+                # 뉴스 결과 처리
+                for item in results.get('news', []):
+                    if result_count >= max_results:
+                        break
+                    
+                    # 콘텐츠 길이 제한
+                    content = item.get('content', '')
+                    if len(content) > max_content_length:
+                        content = content[:max_content_length] + "... [잘림]"
+                    
+                    all_results.append({
+                        'title': item.get('title', ''),
+                        'url': item.get('link', ''),
+                        'content': item.get('description', ''),
+                        'score': 1.0,  # 기본 점수
+                        'raw_content': content
+                    })
+                    result_count += 1
+                
+                # 백과사전 결과 처리
+                for item in results.get('encyc', []):
+                    if result_count >= max_results:
+                        break
+                    
+                    # 콘텐츠 길이 제한
+                    content = item.get('content', '')
+                    if len(content) > max_content_length:
+                        content = content[:max_content_length] + "... [잘림]"
+                    
+                    all_results.append({
+                        'title': item.get('title', ''),
+                        'url': item.get('link', ''),
+                        'content': item.get('description', ''),
+                        'score': 1.0,  # 기본 점수
+                        'raw_content': content
+                    })
+                    result_count += 1
+                
+                # 지식인 결과 처리
+                for item in results.get('kin', []):
+                    if result_count >= max_results:
+                        break
+                    
+                    # 콘텐츠 길이 제한
+                    content = item.get('content', '')
+                    if len(content) > max_content_length:
+                        content = content[:max_content_length] + "... [잘림]"
+                    
+                    all_results.append({
+                        'title': item.get('title', ''),
+                        'url': item.get('link', ''),
+                        'content': item.get('description', ''),
+                        'score': 1.0,  # 기본 점수
+                        'raw_content': content
+                    })
+                    result_count += 1
+                    
+                # 구글 뉴스 결과 처리
+                if include_google and 'google_news' in results:
+                    for item in results.get('google_news', []):
+                        if result_count >= max_results:
+                            break
+                        
+                        # 콘텐츠 길이 제한
+                        content = item.get('content', '')
+                        if len(content) > max_content_length:
+                            content = content[:max_content_length] + "... [잘림]"
+                        
+                        all_results.append({
+                            'title': item.get('title', ''),
+                            'url': item.get('link', ''),
+                            'content': '',  # 구글 뉴스는 description이 없을 수 있음
+                            'score': 1.0,  # 기본 점수
+                            'raw_content': content
+                        })
+                        result_count += 1
+                
+                # 검색 결과 추가
+                search_docs.append({
+                    'query': query,
+                    'follow_up_questions': None,
+                    'answer': None,
+                    'images': [],
+                    'results': all_results
+                })
+            
+        except Exception as e:
+            # 최종 오류 기록 및 빈 결과 반환
+            print(f"네이버 검색 쿼리 '{query}' 처리 실패: {str(e)}")
+            search_docs.append({
+                'query': query,
+                'follow_up_questions': None,
+                'answer': None,
+                'images': [],
+                'results': [],
+                'error': str(e)
+            })
+    
+    return search_docs
+
 async def select_and_execute_search(search_api: str, query_list: list[str], params_to_pass: dict) -> str:
     """Select and execute the appropriate search API.
     
@@ -846,5 +1149,222 @@ async def select_and_execute_search(search_api: str, query_list: list[str], para
     elif search_api == "linkup":
         search_results = await linkup_search(query_list, **params_to_pass)
         return deduplicate_and_format_sources(search_results, max_tokens_per_source=4000)
+    elif search_api == "data_crawler":  # 새로운 검색 API 추가
+        search_results = await data_crawler_search(query_list, **params_to_pass)
+        return deduplicate_and_format_sources(search_results, max_tokens_per_source=4000)
     else:
         raise ValueError(f"Unsupported search API: {search_api}")
+
+async def fetch_contents_from_search_results(search_results: Dict[str, Any], max_items: int = 5) -> List[Dict[str, str]]:
+    """
+    네이버 검색 결과에서 각 링크의 내용을 병렬로 추출합니다.
+    
+    Args:
+        search_results (Dict[str, Any]): naver_search 함수의 결과
+        max_items (int, optional): 처리할 최대 항목 수. 기본값은 5.
+        
+    Returns:
+        List[Dict[str, str]]: 각 URL에서 추출한 콘텐츠 목록
+        
+    Example:
+        ```python
+        search_results = naver_search("골절로 인한 통증 치료 방법", "kin")
+        contents = await fetch_contents_from_search_results(search_results)
+        for content in contents:
+            print(f"제목: {content['title']}")
+            print(f"내용: {content['content'][:100]}...")
+        ```
+    """
+    try:
+        import asyncio
+        import aiohttp
+        from bs4 import BeautifulSoup
+    except ImportError:
+        raise ImportError("aiohttp와 beautifulsoup4 패키지를 설치해야 합니다. pip install aiohttp beautifulsoup4")
+    
+    items = search_results.get('items', [])
+    if not items:
+        return []
+    
+    # 처리할 항목 수 제한
+    items = items[:max_items]
+    
+    async def fetch_content(item):
+        url = item.get('link', '')
+        if not url:
+            return {'url': '', 'title': item.get('title', ''), 'content': '', 'error': '링크가 없습니다.'}
+        
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as response:
+                    if response.status != 200:
+                        return {'url': url, 'title': item.get('title', ''), 'content': '', 'error': f'상태 코드: {response.status}'}
+                    
+                    html = await response.text()
+                    soup = BeautifulSoup(html, 'html.parser')
+                    
+                    # 결과 저장 딕셔너리
+                    content = {
+                        'url': url,
+                        'title': item.get('title', '').replace('<b>', '').replace('</b>', ''),
+                        'description': item.get('description', '').replace('<b>', '').replace('</b>', ''),
+                        'content': '',
+                        'error': None
+                    }
+                    
+                    # 네이버 지식IN의 경우
+                    if 'kin.naver.com' in url:
+                        title_element = soup.select_one('.title')
+                        question_element = soup.select_one('.c-heading__content')
+                        answer_element = soup.select_one('.se-main-container')
+                        
+                        # 답변자 정보와 채택 여부 확인
+                        is_adopted = False
+                        answerer_grade = None
+                        
+                        # 채택 답변 확인
+                        adoption_element = soup.select_one('.badge__adoption')
+                        if adoption_element:
+                            is_adopted = True
+                        
+                        # 답변자 등급 확인
+                        # 등급은 일반적으로 프로필 이미지 옆이나 닉네임 근처에 표시됨
+                        answerer_info = soup.select_one('.c-userinfo__author') or soup.select_one('.answer-author')
+                        if answerer_info:
+                            grade_element = answerer_info.select_one('.grade') or answerer_info.select_one('.badge')
+                            if grade_element:
+                                answerer_grade = grade_element.get_text(strip=True)
+                            
+                            # 답변자 이름도 추출
+                            name_element = answerer_info.select_one('.c-userinfo__author-name') or answerer_info
+                            if name_element:
+                                content['answerer_name'] = name_element.get_text(strip=True)
+                        
+                        # 채택 여부와 등급 정보 저장
+                        content['is_adopted'] = is_adopted
+                        content['answerer_grade'] = answerer_grade
+                        
+                        if title_element:
+                            content['title'] = title_element.get_text(strip=True)
+                        
+                        if question_element:
+                            content['question'] = question_element.get_text(strip=True)
+                        
+                        if answer_element:
+                            content['answer'] = answer_element.get_text(strip=True)
+                            content['content'] = content['answer']
+                    
+                    # 네이버 뉴스의 경우
+                    elif 'news.naver.com' in url:
+                        title_element = soup.select_one('#title_area') or soup.select_one('.media_end_head_headline')
+                        content_element = soup.select_one('#newsct_article') or soup.select_one('#dic_area')
+                        
+                        if title_element:
+                            content['title'] = title_element.get_text(strip=True)
+                        
+                        if content_element:
+                            content['content'] = content_element.get_text(strip=True)
+                    
+                    # 네이버 블로그의 경우
+                    elif 'blog.naver.com' in url:
+                        title_element = soup.select_one('.se-title-text')
+                        content_element = soup.select_one('.se-main-container')
+                        
+                        if title_element:
+                            content['title'] = title_element.get_text(strip=True)
+                        
+                        if content_element:
+                            content['content'] = content_element.get_text(strip=True)
+                    
+                    # 네이버 용어사전의 경우
+                    elif 'terms.naver.com' in url:
+                        title_element = soup.select_one('.headword') or soup.select_one('.word_title')
+                        content_element = soup.select_one('#size_ct') or soup.select_one('.detail_area')
+                        
+                        if title_element:
+                            content['title'] = title_element.get_text(strip=True)
+                        
+                        if content_element:
+                            content['content'] = content_element.get_text(strip=True)
+                    
+                    # 기타 일반 웹페이지의 경우
+                    else:
+                        title_element = soup.select_one('title') or soup.select_one('h1')
+                        content_element = soup.select_one('article') or soup.select_one('.content') or soup.select_one('#content')
+                        
+                        if title_element:
+                            content['title'] = title_element.get_text(strip=True)
+                        
+                        if content_element:
+                            content['content'] = content_element.get_text(strip=True)
+                        else:
+                            # 본문 요소를 찾지 못한 경우 body 전체 텍스트 추출
+                            body = soup.select_one('body')
+                            if body:
+                                content['content'] = body.get_text(strip=True)
+                    
+                    # 내용이 없으면 에러 메시지 추가
+                    if not content['content']:
+                        content['error'] = '내용을 추출할 수 없습니다. 페이지 구조가 변경되었거나 접근이 제한된 페이지일 수 있습니다.'
+                    
+                    return content
+        
+        except Exception as e:
+            return {'url': url, 'title': item.get('title', ''), 'content': '', 'error': f'오류: {str(e)}'}
+    
+    # 모든 항목에 대해 병렬로 내용 추출
+    tasks = [fetch_content(item) for item in items]
+    contents = await asyncio.gather(*tasks)
+    
+    return contents
+
+def fetch_contents_from_search_results_sync(search_results: Dict[str, Any], max_items: int = 5) -> List[Dict[str, str]]:
+    """
+    fetch_contents_from_search_results의 동기 버전입니다.
+    
+    Args:
+        search_results (Dict[str, Any]): naver_search 함수의 결과
+        max_items (int, optional): 처리할 최대 항목 수. 기본값은 5.
+        
+    Returns:
+        List[Dict[str, str]]: 각 URL에서 추출한 콘텐츠 목록
+        
+    Example:
+        ```python
+        search_results = naver_search("골절로 인한 통증 치료 방법", "kin")
+        contents = fetch_contents_from_search_results_sync(search_results)
+        for content in contents:
+            print(f"제목: {content['title']}")
+            print(f"내용: {content['content'][:100]}...")
+        ```
+    """
+    try:
+        import asyncio
+    except ImportError:
+        raise ImportError("asyncio 패키지를 설치해야 합니다.")
+    
+    # 현재 실행 중인 이벤트 루프 가져오기 시도
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # 이벤트 루프가 없는 경우 새로 생성
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    # Windows에서는 asyncio.run()이 제대로 작동하지 않을 수 있어 직접 실행
+    if loop.is_running():
+        # 이미 이벤트 루프가 실행 중인 경우 (Jupyter 노트북 등에서)
+        import nest_asyncio
+        nest_asyncio.apply()
+        return loop.run_until_complete(fetch_contents_from_search_results(search_results, max_items))
+    else:
+        # 이벤트 루프가 실행 중이 아닌 경우
+        try:
+            return asyncio.run(fetch_contents_from_search_results(search_results, max_items))
+        except RuntimeError:
+            # asyncio.run()이 실패하면 직접 실행
+            return loop.run_until_complete(fetch_contents_from_search_results(search_results, max_items))
