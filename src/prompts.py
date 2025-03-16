@@ -1,252 +1,128 @@
-blog_planner_query_writer_instructions="""You are performing research for a blog. 
+"""
+프롬프트 템플릿
 
-<blog topic>
-{topic}
-</blog topic>
-
-<blog organization>
-{blog_organization}
-</blog organization>
-
-<Task>
-Your goal is to generate {number_of_queries} web search queries that will help gather information for planning the blog sections. 
-
-The queries should:
-
-1. Be related to the blog topic
-2. Help satisfy the requirements specified in the blog organization
-
-Make the queries specific enough to find high-quality, relevant sources while covering the breadth needed for the blog structure.
-</Task>
-
-<Format>
-Call the Queries tool 
-</Format>
+이 모듈은 블로그 생성 워크플로우에서 사용되는 다양한 프롬프트 템플릿을 제공합니다.
 """
 
-blog_planner_instructions="""I want a plan for a blog that is concise and focused.
+# 섹션 계획 템플릿
+section_planner_instructions = """
+당신은 블로그 포스트를 구성하는 전문 작가입니다.
+주제: {topic}
 
-<blog topic>
-The topic of the blog is:
-{topic}
-</blog topic>
+이 주제에 대한 정보를 제공하고 독자에게 유용한 블로그 포스트를 작성하기 위해 
+{num_sections}개의 핵심 섹션으로 구성된 블로그 포스트 계획을 만들어 주세요.
 
-<blog organization>
-The blog should follow this organization: 
-{blog_organization}
-</blog organization>
+각 섹션은 다음 필드를 포함해야 합니다:
+- name: 섹션 제목
+- description: 섹션에서 다룰 내용에 대한 자세한 설명
 
-<Context>
-Here is context to use to plan the sections of the blog: 
+블로그는 소개/서론과 결론 섹션을 포함해야 합니다.
+다른 섹션들은 주제의 다양한 측면을 다루어야 합니다.
+"""
+
+# 섹션 작성 지시사항
+section_writer_instructions = """
+당신은 블로그 포스트 작성 전문가입니다. 제공된 섹션 주제와 검색 정보를 바탕으로 
+블로그 섹션을 작성해 주세요. 
+
+다음 안내를 따라 주세요:
+1. 정확하고 사실적인 정보만 포함하세요.
+2. 제공된 검색 결과에 없는 정보는 작성하지 마세요.
+3. 섹션 주제에 집중해서 관련 정보만 작성하세요.
+4. 전체 블로그 주제와 잘 어울리는 내용을 작성하세요.
+5. 독자가 쉽게 이해할 수 있는 명확하고 간결한 문체를 사용하세요.
+6. HTML이나 마크다운과 같은 형식 지정을 포함하지 마세요.
+7. 읽기 쉽도록 단락을 사용하세요.
+8. 출처 인용이나 각주는 포함하지 마세요.
+"""
+
+# 섹션 작성 입력
+section_writer_inputs = """
+블로그 주제: {topic}
+섹션 이름: {section_name}
+섹션 주제: {section_topic}
+
+검색 정보: {context}
+
+기존 섹션 내용(있는 경우): {section_content}
+
+위 정보를 바탕으로 이 섹션에 대한 텍스트를 작성해 주세요.
+"""
+
+# 섹션 평가 지시사항
+section_grader_instructions = """
+당신은 블로그 포스트의 품질을 평가하는 전문가입니다.
+
+블로그 주제: {topic}
+섹션 주제: {section_topic}
+섹션 내용: {section}
+
+이 섹션을 다음 기준으로 평가해 주세요:
+1. 정확성: 내용이 사실에 기반하고 정확한가?
+2. 관련성: 내용이 섹션 주제 및 전체 블로그 주제와 관련이 있는가?
+3. 완전성: 주제를 충분히 다루고 있는가? 중요한 정보가 누락되었는가?
+4. 구성: 내용이 논리적으로 구성되어 있는가?
+5. 가독성: 내용이 명확하고 이해하기 쉬운가?
+
+평가 후:
+- "pass" 또는 "fail" 등급을 부여하세요.
+- 평가 등급의 이유를 설명하세요.
+- 만약 "fail"이라면, 부족한 정보를 찾기 위한 최대 {number_of_follow_up_queries}개의 검색 쿼리를 제공하세요.
+"""
+
+# 최종 섹션 작성 지시사항
+final_section_writer_instructions = """
+당신은 블로그 포스트 작성 전문가입니다.
+
+블로그 주제: {topic}
+섹션 이름: {section_name}
+섹션 주제: {section_topic}
+
+이미 완성된 블로그 섹션들:
 {context}
-</Context>
 
-<Task>
-Generate a list of sections for the blog. Your plan should be tight and focused with NO overlapping sections or unnecessary filler. 
-
-For example, a good blog structure might look like:
-1/ intro
-2/ overview of topic A
-3/ overview of topic B
-4/ comparison between A and B
-5/ conclusion
-
-Each section should have the fields:
-
-- Name - Name for this section of the blog.
-- Description - Brief overview of the main topics covered in this section.
-- Research - Whether to perform web research for this section of the blog.
-- Content - The content of the section, which you will leave blank for now.
-
-Integration guidelines:
-- Include examples and implementation details within main topic sections, not as separate sections
-- Ensure each section has a distinct purpose with no content overlap
-- Combine related concepts rather than separating them
-
-Before submitting, review your structure to ensure it has no redundant sections and follows a logical flow.
-</Task>
-
-<Feedback>
-Here is feedback on the blog structure from review (if any):
-{feedback}
-</Feedback>
-
-<Format>
-Call the Sections tool 
-</Format>
+다음 안내를 따라 주세요:
+1. 위의 완성된 섹션들을 기반으로 "{section_name}" 섹션을 작성하세요.
+2. 이미 작성된 내용을 요약하거나 종합할 때는 내용을 정확하게 반영하세요.
+3. 서론/소개인 경우, 블로그의 주요 내용을 미리보기 형태로 소개하세요.
+4. 결론인 경우, 블로그의 핵심 내용과 주요 시사점을 종합하세요.
+5. 독자가 쉽게 이해할 수 있는 명확하고 간결한 문체를 사용하세요.
+6. HTML이나 마크다운과 같은 형식 지정을 포함하지 마세요.
+7. 읽기 쉽도록 단락을 사용하세요.
 """
 
-query_writer_instructions="""You are an expert technical writer crafting targeted web search queries that will gather comprehensive information for writing a technical blog section.
+# 섹션 결합 지시사항
+combine_sections_instructions = """
+당신은 블로그 편집자입니다. 여러 섹션으로 작성된 블로그를 매끄럽게 하나의 
+통합된 포스트로 조합해야 합니다.
 
-<blog topic>
-{topic}
-</blog topic>
+블로그 주제: {topic}
 
-<Section topic>
-{section_topic}
-</Section topic>
+블로그 섹션들:
+{sections}
 
-<Task>
-Your goal is to generate {number_of_queries} search queries that will help gather comprehensive information above the section topic. 
-
-The queries should:
-
-1. Be related to the topic 
-2. Examine different aspects of the topic
-
-Make the queries specific enough to find high-quality, relevant sources.
-</Task>
-
-<Format>
-Call the Queries tool 
-</Format>
+다음 안내를 따라 주세요:
+1. 각 섹션을 순서대로 배치하여 논리적인 흐름을 만드세요.
+2. 필요한 경우 섹션 간 자연스러운 전환을 위한 문장을 추가하세요.
+3. 일관된 문체를 유지하세요.
+4. 반복되는 내용을 제거하되, 중요한 정보는 유지하세요.
+5. 필요한 경우 섹션 제목을 markdown 형식(##)으로 유지하세요.
+6. 최종 블로그 포스트는 완전하고 응집력 있어야 합니다.
+7. 내용을 수정하거나 정보를 추가하지 말고, 기존 섹션들을 효과적으로 결합하는 데 집중하세요.
 """
 
-section_writer_instructions = """Write one section of a research blog.
+# 검색 쿼리 생성 템플릿
+search_query_generator_instructions = """
+당신은 정보 검색 전문가입니다. 주어진 주제에 대한 효과적인 검색 쿼리를 생성해야 합니다.
 
-<Task>
-1. Review the blog topic, section name, and section topic carefully.
-2. If present, review any existing section content. 
-3. Then, look at the provided Source material.
-4. Decide the sources that you will use it to write a blog section.
-5. Write the blog section and list your sources. 
-</Task>
+블로그 주제: {topic}
+섹션 주제: {section_topic}
+섹션 설명: {section_description}
 
-<Writing Guidelines>
-- If existing section content is not populated, write from scratch
-- If existing section content is populated, synthesize it with the source material
-- Strict 150-200 word limit
-- Use simple, clear language
-- Use short paragraphs (2-3 sentences max)
-- Use ## for section title (Markdown format)
-</Writing Guidelines>
-
-<Citation Rules>
-- Assign each unique URL a single citation number in your text
-- End with ### Sources that lists each source with corresponding numbers
-- IMPORTANT: Number sources sequentially without gaps (1,2,3,4...) in the final list regardless of which sources you choose
-- Example format:
-  [1] Source Title: URL
-  [2] Source Title: URL
-</Citation Rules>
-
-<Final Check>
-1. Verify that EVERY claim is grounded in the provided Source material
-2. Confirm each URL appears ONLY ONCE in the Source list
-3. Verify that sources are numbered sequentially (1,2,3...) without any gaps
-</Final Check>
+다음 안내를 따라 {num_queries}개의 효과적인 검색 쿼리를 만들어 주세요:
+1. 각 쿼리는 구체적이고 관련성 높은 정보를 찾을 수 있어야 합니다.
+2. 쿼리는 섹션 주제와 직접적으로 관련되어야 합니다.
+3. 다양한 측면을 다루는 여러 쿼리를 제공하세요.
+4. 쿼리는 웹 검색 엔진에 적합해야 합니다.
+5. 쿼리 목록만 반환하고 다른 설명이나 주석은 포함하지 마세요.
 """
-
-section_writer_inputs=""" 
-<blog topic>
-{topic}
-</blog topic>
-
-<Section name>
-{section_name}
-</Section name>
-
-<Section topic>
-{section_topic}
-</Section topic>
-
-<Existing section content (if populated)>
-{section_content}
-</Existing section content>
-
-<Source material>
-{context}
-</Source material>
-"""
-
-section_grader_instructions = """Review a blog section relative to the specified topic:
-
-<blog topic>
-{topic}
-</blog topic>
-
-<section topic>
-{section_topic}
-</section topic>
-
-<section content>
-{section}
-</section content>
-
-<task>
-Evaluate whether the section content adequately addresses the section topic.
-
-If the section content does not adequately address the section topic, generate {number_of_follow_up_queries} follow-up search queries to gather missing information.
-</task>
-
-<format>
-Call the Feedback tool and output with the following schema:
-
-grade: Literal["pass","fail"] = Field(
-    description="Evaluation result indicating whether the response meets requirements ('pass') or needs revision ('fail')."
-)
-follow_up_queries: List[SearchQuery] = Field(
-    description="List of follow-up search queries.",
-)
-</format>
-"""
-
-final_section_writer_instructions="""You are an expert technical writer crafting a section that synthesizes information from the rest of the blog.
-
-<blog topic>
-{topic}
-</blog topic>
-
-<Section name>
-{section_name}
-</Section name>
-
-<Section topic> 
-{section_topic}
-</Section topic>
-
-<Available blog content>
-{context}
-</Available blog content>
-
-<Task>
-1. Section-Specific Approach:
-
-For Introduction:
-- Use # for blog title (Markdown format)
-- 50-100 word limit
-- Write in simple and clear language
-- Focus on the core motivation for the blog in 1-2 paragraphs
-- Use a clear narrative arc to introduce the blog
-- Include NO structural elements (no lists or tables)
-- No sources section needed
-
-For Conclusion/Summary:
-- Use ## for section title (Markdown format)
-- 100-150 word limit
-- For comparative blogs:
-    * Must include a focused comparison table using Markdown table syntax
-    * Table should distill insights from the blog
-    * Keep table entries clear and concise
-- For non-comparative blogs: 
-    * Only use ONE structural element IF it helps distill the points made in the blog:
-    * Either a focused table comparing items present in the blog (using Markdown table syntax)
-    * Or a short list using proper Markdown list syntax:
-      - Use `*` or `-` for unordered lists
-      - Use `1.` for ordered lists
-      - Ensure proper indentation and spacing
-- End with specific next steps or implications
-- No sources section needed
-
-3. Writing Approach:
-- Use concrete details over general statements
-- Make every word count
-- Focus on your single most important point
-</Task>
-
-<Quality Checks>
-- For introduction: 50-100 word limit, # for blog title, no structural elements, no sources section
-- For conclusion: 100-150 word limit, ## for section title, only ONE structural element at most, no sources section
-- Markdown format
-- Do not include word count or any preamble in your response
-</Quality Checks>"""

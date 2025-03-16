@@ -1,0 +1,87 @@
+[
+  {
+    "title": "Perplexity 검색, 소스 1",
+    "url": "https://litslink.com/blog/3-most-advanced-ai-systems-overview",
+    "content": "Here are some of the latest developments and advanced technologies in artificial intelligence:\n\n## Generative AI\n\nGenerative AI has made significant strides recently, moving beyond just chatbots:\n\n- OpenAI's GPT-4 model can process text, audio, images and videos, expanding its multimodal capabilities[1][2].\n- There's a trend toward building software applications on top of large language models rather than deploying standalone chatbots[3].\n- Text-to-video models like OpenAI's Sora and voice generation tools like ElevenLabs are pushing the boundaries of AI-generated content[3].\n\n## AI Agents\n\nAgentic AI models capable of more autonomous action are an emerging frontier:\n\n- Tools like Salesforce's Agentforce can autonomously handle tasks like scheduling and data analysis for business users[3].\n- AI agents can adapt to new information in real-time and make independent decisions, unlike simple automation[3].\n- However, this autonomy also raises new ethical concerns about potential mistakes or unintended consequences[3].\n\n## Multimodal AI\n\nAI systems that can process multiple types of data are becoming more prevalent:\n\n- Models like Google's Gemini can handle text, audio, images and video simultaneously[1].\n- This allows for more sophisticated reasoning and outputs across various data types[1].\n- Multimodal AI is expected to enable new applications in fields like healthcare, education and content creation[1].\n\n## AI in Robotics\n\nRobotics is another area where AI is making significant advances:\n\n- Foundation models for robotics could potentially be even more transformative than generative AI[3].\n- At UC San Diego, researchers are developing AI-powered surgical robots that can recognize blood, control hemorrhaging, and autonomously perform certain procedures[4].\n\n## Specialized AI Applications\n\nAI is being applied in increasingly specialized and impactful ways:\n\n- Social robots to assist people with cognitive impairments[4]\n- AI-powered mobile platforms for managing chronic health conditions[4]\n- Self-driving vehicles for delivery and micro-transit on campuses[4]\n\nAs AI technologies continue to evolve rapidly, we're likely to see even more innovative applications and capabilities emerge in the near future.",
+    "raw_content": "Here are some of the latest developments and advanced technologies in artificial intelligence:\n\n## Generative AI\n\nGenerative AI has made significant strides recently, moving beyond just chatbots:\n\n- OpenAI's GPT-4 model can process text, audio, images and videos, expanding its multimodal capabilities[1][2].\n- There's a trend toward building software applications on top of large language models rather than deploying standalone chatbots[3].\n- Text-to-video models like OpenAI's Sora and voice generation tools like ElevenLabs are pushing the boundaries of AI-generated content[3].\n\n## AI Agents\n\nAgentic AI models capable of more autonomous action are an emerging frontier:\n\n- Tools like Salesforce's Agentforce can autonomously handle tasks like scheduling and data analysis for business users[3].\n- AI agents can adapt to new information in real-time and make independent decisions, unlike simple automation[3].\n- However, this autonomy also raises new ethical concerns about potential mistakes or unintended consequences[3].\n\n## Multimodal AI\n\nAI systems that can process multiple types of data are becoming more prevalent:\n\n- Models like Google's Gemini can handle text, audio, images and video simultaneously[1].\n- This allows for more sophisticated reasoning and outputs across various data types[1].\n- Multimodal AI is expected to enable new applications in fields like healthcare, education and content creation[1].\n\n## AI in Robotics\n\nRobotics is another area where AI is making significant advances:\n\n- Foundation models for robotics could potentially be even more transformative than generative AI[3].\n- At UC San Diego, researchers are developing AI-powered surgical robots that can recognize blood, control hemorrhaging, and autonomously perform certain procedures[4].\n\n## Specialized AI Applications\n\nAI is being applied in increasingly specialized and impactful ways:\n\n- Social robots to assist people with cognitive impairments[4]\n- AI-powered mobile platforms for managing chronic health conditions[4]\n- Self-driving vehicles for delivery and micro-transit on campuses[4]\n\nAs AI technologies continue to evolve rapidly, we're likely to see even more innovative applications and capabilities emerge in the near future.",
+    "score": 1.0,
+    "source_type": "perplexity",
+    "metadata": {
+      "model": "sonar-pro",
+      "query": "artificial intelligence latest technology",
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  },
+  {
+    "title": "Perplexity 검색, 소스 2",
+    "url": "https://builtin.com/artificial-intelligence/examples-ai-in-industry",
+    "content": "주요 소스 참고",
+    "raw_content": null,
+    "score": 0.5,
+    "source_type": "perplexity",
+    "metadata": {
+      "reference_number": 2,
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  },
+  {
+    "title": "Perplexity 검색, 소스 3",
+    "url": "https://www.techtarget.com/searchenterpriseai/tip/9-top-AI-and-machine-learning-trends",
+    "content": "주요 소스 참고",
+    "raw_content": null,
+    "score": 0.5,
+    "source_type": "perplexity",
+    "metadata": {
+      "reference_number": 3,
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  },
+  {
+    "title": "Perplexity 검색, 소스 4",
+    "url": "https://today.ucsd.edu/story/7-ai-powered-technologies-you-should-know-about",
+    "content": "주요 소스 참고",
+    "raw_content": null,
+    "score": 0.5,
+    "source_type": "perplexity",
+    "metadata": {
+      "reference_number": 4,
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  },
+  {
+    "title": "Perplexity 검색, 소스 5",
+    "url": "https://mindmajix.com/artificial-intelligence-technologies",
+    "content": "주요 소스 참고",
+    "raw_content": null,
+    "score": 0.5,
+    "source_type": "perplexity",
+    "metadata": {
+      "reference_number": 5,
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  },
+  {
+    "title": "Perplexity 검색, 소스 6",
+    "url": "https://www.sas.com/en_us/insights/articles/analytics/five-ai-technologies.html",
+    "content": "주요 소스 참고",
+    "raw_content": null,
+    "score": 0.5,
+    "source_type": "perplexity",
+    "metadata": {
+      "reference_number": 6,
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  },
+  {
+    "title": "Perplexity 검색, 소스 7",
+    "url": "https://www.artificialintelligence-news.com",
+    "content": "주요 소스 참고",
+    "raw_content": null,
+    "score": 0.5,
+    "source_type": "perplexity",
+    "metadata": {
+      "reference_number": 7,
+      "crawled_at": "2025-03-16T20:18:39.546309"
+    }
+  }
+]

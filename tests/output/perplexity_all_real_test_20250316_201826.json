@@ -1,0 +1,182 @@
+[
+  {
+    "query": "artificial intelligence latest technology",
+    "results": [
+      {
+        "title": "Perplexity 검색, 소스 1",
+        "url": "https://litslink.com/blog/3-most-advanced-ai-systems-overview",
+        "content": "Based on the search results, here are some of the latest developments and advanced technologies in artificial intelligence:\n\n## Advanced AI Systems\n\n1. GPT-4: Released in March 2023, GPT-4 is the latest iteration of OpenAI's large language model. It features:\n   - Visual input capabilities\n   - Higher level of creativity \n   - Longer context processing (up to 25K words)[1]\n\n2. Google DeepMind's Gemini: A sophisticated multimodal AI system that can:\n   - Process and reason across text, audio, images, and video\n   - Handle complex tasks combining different data types\n   - Achieve top results on over 30 benchmarks[1]\n\n3. Tesla Autopilot: An advanced AI system for semi-autonomous driving that:\n   - Uses cameras, radar, sensors, and GPS for a holistic view\n   - Employs deep learning neural networks trained on billions of miles of data\n   - Can detect accidents with 90-95% accuracy[1]\n\n## Emerging AI Trends\n\n1. AI Agents: Autonomous AI models capable of independent action are gaining interest. Tools like Salesforce's Agentforce can handle tasks like scheduling and data analysis with minimal human oversight[3].\n\n2. Multimodal AI: Systems that can process multiple data types (text, audio, video, images) are becoming more prevalent, like OpenAI's text-to-video Sora[3].\n\n3. AI in Healthcare: AI is being used to:\n   - Reduce unnecessary hospital visits\n   - Speed up pharmaceutical research\n   - Improve diagnostic accuracy in pathology[2]\n\n4. Robotics and AI: Researchers are developing AI-powered robots for various applications, including:\n   - Assisting people with cognitive impairments\n   - Performing automated lifesaving surgeries[4]\n\n5. AI for Chronic Health Management: Mobile platforms like CIPRA.ai use data from wearable devices to generate personalized health recommendations[4].\n\nAs AI technology continues to advance, we're seeing a shift from chatbot-centric applications to more sophisticated, multimodal systems that can handle complex tasks across various domains. The focus is increasingly on practical applications and integration of AI into existing systems and workflows.",
+        "raw_content": "Based on the search results, here are some of the latest developments and advanced technologies in artificial intelligence:\n\n## Advanced AI Systems\n\n1. GPT-4: Released in March 2023, GPT-4 is the latest iteration of OpenAI's large language model. It features:\n   - Visual input capabilities\n   - Higher level of creativity \n   - Longer context processing (up to 25K words)[1]\n\n2. Google DeepMind's Gemini: A sophisticated multimodal AI system that can:\n   - Process and reason across text, audio, images, and video\n   - Handle complex tasks combining different data types\n   - Achieve top results on over 30 benchmarks[1]\n\n3. Tesla Autopilot: An advanced AI system for semi-autonomous driving that:\n   - Uses cameras, radar, sensors, and GPS for a holistic view\n   - Employs deep learning neural networks trained on billions of miles of data\n   - Can detect accidents with 90-95% accuracy[1]\n\n## Emerging AI Trends\n\n1. AI Agents: Autonomous AI models capable of independent action are gaining interest. Tools like Salesforce's Agentforce can handle tasks like scheduling and data analysis with minimal human oversight[3].\n\n2. Multimodal AI: Systems that can process multiple data types (text, audio, video, images) are becoming more prevalent, like OpenAI's text-to-video Sora[3].\n\n3. AI in Healthcare: AI is being used to:\n   - Reduce unnecessary hospital visits\n   - Speed up pharmaceutical research\n   - Improve diagnostic accuracy in pathology[2]\n\n4. Robotics and AI: Researchers are developing AI-powered robots for various applications, including:\n   - Assisting people with cognitive impairments\n   - Performing automated lifesaving surgeries[4]\n\n5. AI for Chronic Health Management: Mobile platforms like CIPRA.ai use data from wearable devices to generate personalized health recommendations[4].\n\nAs AI technology continues to advance, we're seeing a shift from chatbot-centric applications to more sophisticated, multimodal systems that can handle complex tasks across various domains. The focus is increasingly on practical applications and integration of AI into existing systems and workflows.",
+        "score": 1.0,
+        "source_type": "perplexity",
+        "metadata": {
+          "model": "sonar-pro",
+          "query": "artificial intelligence latest technology",
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 2",
+        "url": "https://builtin.com/artificial-intelligence/examples-ai-in-industry",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 2,
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 3",
+        "url": "https://www.techtarget.com/searchenterpriseai/tip/9-top-AI-and-machine-learning-trends",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 3,
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 4",
+        "url": "https://today.ucsd.edu/story/7-ai-powered-technologies-you-should-know-about",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 4,
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 5",
+        "url": "https://news.mit.edu/topic/artificial-intelligence2",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 5,
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 6",
+        "url": "https://www.sas.com/en_us/insights/articles/analytics/five-ai-technologies.html",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 6,
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 7",
+        "url": "https://www.artificialintelligence-news.com",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 7,
+          "crawled_at": "2025-03-16T20:18:16.504030"
+        }
+      }
+    ]
+  },
+  {
+    "query": "machine learning algorithms",
+    "results": [
+      {
+        "title": "Perplexity 검색, 소스 1",
+        "url": "https://www.simplilearn.com/10-algorithms-machine-learning-engineers-need-to-know-article",
+        "content": "Here are some of the most common and important machine learning algorithms:\n\n1. Linear Regression - Used for predicting continuous numerical values based on input features.\n\n2. Logistic Regression - Used for binary classification problems.\n\n3. Decision Trees - Used for both classification and regression tasks by creating a tree-like model of decisions.\n\n4. Random Forest - An ensemble learning method that constructs multiple decision trees and merges them to get more accurate predictions.\n\n5. Support Vector Machines (SVM) - Used for classification by finding the hyperplane that best divides a dataset into classes.\n\n6. K-Nearest Neighbors (KNN) - A simple algorithm that classifies data points based on the classes of their nearest neighbors.\n\n7. Naive Bayes - A probabilistic classifier based on applying Bayes' theorem with strong independence assumptions between features.\n\n8. K-Means Clustering - An unsupervised algorithm used for partitioning a dataset into K distinct clusters.\n\n9. Principal Component Analysis (PCA) - Used for dimensionality reduction to compress data while preserving important information.\n\n10. Neural Networks - Deep learning models inspired by biological neural networks, used for complex pattern recognition tasks.\n\n11. Gradient Boosting Algorithms (e.g. XGBoost, LightGBM) - Ensemble learning methods that build a series of weak learners to create a strong predictive model.\n\n12. Convolutional Neural Networks (CNN) - Specialized neural networks used primarily for image recognition and processing.\n\n13. Recurrent Neural Networks (RNN) - Neural networks designed to work with sequence data like time series or natural language.\n\n14. Long Short-Term Memory Networks (LSTM) - A type of RNN capable of learning long-term dependencies.\n\n15. Reinforcement Learning Algorithms - Used for training agents to make sequences of decisions in an environment to maximize cumulative reward.\n\nThese algorithms form the foundation of many machine learning applications and are used across various domains depending on the specific problem and data characteristics. The choice of algorithm depends on factors like the type of problem (classification, regression, clustering, etc.), the size and nature of the dataset, computational resources, and the desired balance between model complexity and interpretability.",
+        "raw_content": "Here are some of the most common and important machine learning algorithms:\n\n1. Linear Regression - Used for predicting continuous numerical values based on input features.\n\n2. Logistic Regression - Used for binary classification problems.\n\n3. Decision Trees - Used for both classification and regression tasks by creating a tree-like model of decisions.\n\n4. Random Forest - An ensemble learning method that constructs multiple decision trees and merges them to get more accurate predictions.\n\n5. Support Vector Machines (SVM) - Used for classification by finding the hyperplane that best divides a dataset into classes.\n\n6. K-Nearest Neighbors (KNN) - A simple algorithm that classifies data points based on the classes of their nearest neighbors.\n\n7. Naive Bayes - A probabilistic classifier based on applying Bayes' theorem with strong independence assumptions between features.\n\n8. K-Means Clustering - An unsupervised algorithm used for partitioning a dataset into K distinct clusters.\n\n9. Principal Component Analysis (PCA) - Used for dimensionality reduction to compress data while preserving important information.\n\n10. Neural Networks - Deep learning models inspired by biological neural networks, used for complex pattern recognition tasks.\n\n11. Gradient Boosting Algorithms (e.g. XGBoost, LightGBM) - Ensemble learning methods that build a series of weak learners to create a strong predictive model.\n\n12. Convolutional Neural Networks (CNN) - Specialized neural networks used primarily for image recognition and processing.\n\n13. Recurrent Neural Networks (RNN) - Neural networks designed to work with sequence data like time series or natural language.\n\n14. Long Short-Term Memory Networks (LSTM) - A type of RNN capable of learning long-term dependencies.\n\n15. Reinforcement Learning Algorithms - Used for training agents to make sequences of decisions in an environment to maximize cumulative reward.\n\nThese algorithms form the foundation of many machine learning applications and are used across various domains depending on the specific problem and data characteristics. The choice of algorithm depends on factors like the type of problem (classification, regression, clustering, etc.), the size and nature of the dataset, computational resources, and the desired balance between model complexity and interpretability.",
+        "score": 1.0,
+        "source_type": "perplexity",
+        "metadata": {
+          "model": "sonar-pro",
+          "query": "machine learning algorithms",
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 2",
+        "url": "https://www.machinelearningmastery.com/a-tour-of-machine-learning-algorithms/",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 2,
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 3",
+        "url": "https://www.sas.com/en_ie/insights/articles/analytics/machine-learning-algorithms.html",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 3,
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 4",
+        "url": "https://www.ibm.com/think/topics/machine-learning-algorithms",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 4,
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 5",
+        "url": "https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-are-machine-learning-algorithms",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 5,
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 6",
+        "url": "https://en.wikipedia.org/wiki/Machine_learning",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 6,
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      },
+      {
+        "title": "Perplexity 검색, 소스 7",
+        "url": "https://www.coursera.org/articles/machine-learning-algorithms",
+        "content": "주요 소스 참고",
+        "raw_content": null,
+        "score": 0.5,
+        "source_type": "perplexity",
+        "metadata": {
+          "reference_number": 7,
+          "crawled_at": "2025-03-16T20:18:26.535774"
+        }
+      }
+    ]
+  }
+]

@@ -3,3 +3,53 @@ description:
 globs: 
 alwaysApply: true
 ---
+├── output/
+│   ├── diagram/
+│   └── html/
+├── pytree.py
+├── scripts/
+├── src/
+│   ├── __init__.py
+│   ├── common/
+│   │   ├── config/
+│   │   │   ├── __init__.py
+│   │   │   ├── base.py
+│   │   │   ├── blog.py
+│   │   │   ├── constants.py
+│   │   │   ├── providers.py
+│   │   │   └── search.py
+│   │   ├── exceptions.py
+│   │   ├── logging.py
+│   │   └── types.py
+│   ├── core/
+│   │   ├── content/
+│   │   │   └── generator/
+│   │   │       ├── blog.py
+│   │   │       └── diagram.py
+│   │   └── search/
+│   │       ├── analyzers/
+│   │       │   ├── keyword.py
+│   │       │   └── trend.py
+│   │       ├── engines/
+│   │       │   ├── academic.py
+│   │       │   ├── google.py
+│   │       │   └── naver.py
+│   │       └── formatters/
+│   ├── publishing/
+│   │   └── platforms/
+│   └── workflows/
+│       ├── graphs/
+│       │   └── blog_graph.py
+│       ├── nodes/
+│       │   ├── feedback/
+│       │   │   └── blog_reviewer.py
+│       │   ├── optimizers/
+│       │   ├── planners/
+│       │   │   └── blog_planner.py
+│       │   ├── searchers/
+│       │   └── writers/
+│       └── states/
+│           └── blog_state.py
+
+
+
