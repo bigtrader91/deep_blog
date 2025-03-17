@@ -1,55 +1,155 @@
 ---
-description: 
+description: project trees
 globs: 
 alwaysApply: true
 ---
+├── examples/
+│   ├── keyword_classifier_test.py
+│   ├── keyword_collector_example.py
+│   ├── markdown_converter_example.py
+│   ├── markdown_to_html_converter.py
+│   ├── naver_api_example.py
+│   ├── results/
+│   ├── standalone_markdown_app.py
+│   └── thumbnail_example.py
 ├── output/
 │   ├── diagram/
-│   └── html/
+│   ├── html/
+│   └── images/
 ├── pytree.py
-├── scripts/
+├── resources/
+│   ├── background_images/
+│   └── fonts/
+├── setup.py
+├── setup_path.py
 ├── src/
 │   ├── __init__.py
+│   ├── app.py
 │   ├── common/
+│   │   ├── __init__.py
 │   │   ├── config/
 │   │   │   ├── __init__.py
 │   │   │   ├── base.py
 │   │   │   ├── blog.py
+│   │   │   ├── configuration.py
 │   │   │   ├── constants.py
 │   │   │   ├── providers.py
-│   │   │   └── search.py
+│   │   │   ├── search.py
+│   │   │   └── theme_styles.py
 │   │   ├── exceptions.py
 │   │   ├── logging.py
-│   │   └── types.py
+│   │   ├── types.py
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       └── selenium_utils.py
 │   ├── core/
+│   │   ├── __init__.py
+│   │   ├── classifier/
+│   │   │   ├── __init__.py
+│   │   │   ├── keyword_classifier.py
 │   │   ├── content/
+│   │   │   ├── __init__.py
+│   │   │   ├── formatters/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── markdown_formatter.py
+│   │   │   │   ├── section_formatter.py
+│   │   │   │   └── source_formatter.py
 │   │   │   └── generator/
+│   │   │       ├── __init__.py
 │   │   │       ├── blog.py
-│   │   │       └── diagram.py
+│   │   │       ├── diagram.py
+│   │   │       ├── svg/
+│   │   │       │   ├── __init__.py
+│   │   │       │   ├── card_diagram.py
+│   │   │       │   ├── common_utils.py
+│   │   │       │   ├── diagram_utils.py
+│   │   │       │   ├── example.py
+│   │   │       │   ├── image_diagram.py
+│   │   │       │   └── responsive_utils.py
+│   │   │       ├── text/
+│   │   │       │   ├── __init__.py
+│   │   │       │   ├── diagram_generator.py
+│   │   │       │   ├── select_diagram.py
+│   │   │       │   └── title_generator.py
+│   │   │       └── thumnail.py
 │   │   └── search/
+│   │       ├── __init__.py
 │   │       ├── analyzers/
+│   │       │   ├── __init__.py
 │   │       │   ├── keyword.py
 │   │       │   └── trend.py
 │   │       ├── engines/
+│   │       │   ├── __init__.py
 │   │       │   ├── academic.py
 │   │       │   ├── google.py
-│   │       │   └── naver.py
-│   │       └── formatters/
+│   │       │   ├── naver.py
+│   │       │   ├── naver_keywords.py
+│   │       │   └── web_engines.py
+│   │       ├── manager/
+│   │       │   ├── __init__.py
+│   │       │   ├── content_fetcher.py
+│   │       │   └── orchestrator.py
+│   │       ├── utils/
+│   │       │   ├── __init__.py
+│   │       │   └── naver_api_utils.py
+│   │       └── utils.py
+│   ├── generator/
+│   │   ├── __init__.py
+│   │   ├── svg/
+│   │   │   ├── __init__.py
+│   │   │   ├── card_diagram.py
+│   │   │   ├── common_utils.py
+│   │   │   ├── diagram_utils.py
+│   │   │   ├── example.py
+│   │   │   ├── image_diagram.py
+│   │   │   └── responsive_utils.py
+│   │   └── text/
+│   │       ├── __init__.py
+│   │       ├── diagram_generator.py
+│   │       ├── select_diagram.py
+│   │       └── title_generator.py
+│   ├── prompts/
+│   │   ├── __init__.py
+│   │   ├── editing.py
+│   │   ├── evaluation.py
+│   │   ├── planning.py
+│   │   ├── search.py
+│   │   └── writing.py
 │   ├── publishing/
+│   │   ├── __init__.py
 │   │   └── platforms/
+│   │       └── __init__.py
+│   ├── search_keywords/
 │   └── workflows/
+│       ├── __init__.py
 │       ├── graphs/
-│       │   └── blog_graph.py
+│       │   ├── __init__.py
+│       │   ├── blog_graph.py
+│       │   ├── blog_workflow.py
+│       │   ├── markdown_workflow.py
+│       │   └── search_workflow.py
 │       ├── nodes/
+│       │   ├── __init__.py
 │       │   ├── feedback/
+│       │   │   ├── __init__.py
 │       │   │   └── blog_reviewer.py
 │       │   ├── optimizers/
+│       │   │   └── __init__.py
 │       │   ├── planners/
-│       │   │   └── blog_planner.py
+│       │   │   ├── __init__.py
+│       │   │   ├── blog_planner.py
+│       │   │   └── section_planner.py
+│       │   ├── processors/
+│       │   │   └── source_combiner.py
 │       │   ├── searchers/
+│       │   │   ├── __init__.py
+│       │   │   └── section_searcher.py
 │       │   └── writers/
+│       │       ├── __init__.py
+│       │       ├── section_combiner.py
+│       │       └── section_writer.py
 │       └── states/
-│           └── blog_state.py
-
-
-
+│           ├── __init__.py
+│           ├── blog_state.py
+│           ├── common_states.py
+│           └── document_state.py

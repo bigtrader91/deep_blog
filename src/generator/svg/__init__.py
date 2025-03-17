@@ -1,29 +1,32 @@
 """
-다양한 SVG 다이어그램 생성 모듈을 제공하는 패키지입니다.
+[경고] 이 모듈은 구조 재배치로 인해 deprecated 되었습니다.
 
-이 패키지는 다음과 같은 다이어그램 유형을 지원합니다:
-- 카드 다이어그램: 카드 형태의 정보 표시 다이어그램 (3개 이상의 섹션에 적합)
-- 이미지 다이어그램: 상단 이미지와 하단 텍스트로 구성된 다이어그램 (2개 이하의 섹션에 적합)
+새 경로: src.core.content.generator.svg
 
-모든 다이어그램은 통일된 인터페이스를 제공하며, 메인 타이틀과 서브 섹션으로 구성됩니다.
-모든 다이어그램은 반응형으로 설계되어 다양한 화면 크기와 기기에서 적절하게 표시됩니다.
+이 모듈은 하위 호환성을 위해 유지되며, 새 코드에서는 새 경로를 사용하세요.
 """
 
-# 먼저 타입 정의 가져오기
-from typing import Literal
+import warnings
 
-# DiagramType 정의
-DiagramType = Literal["card", "image"]
+warnings.warn(
+    "src.generator.svg 모듈은 deprecated되었으며 src.core.content.generator.svg로 이동했습니다. "
+    "새 코드에서는 새 경로를 사용하세요.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
-# 반응형 유틸리티
-from .responsive_utils import add_responsive_script, wrap_text
+# 하위 호환성을 위해 새 위치에서 모듈 가져오기
+from src.core.content.generator.svg import (
+    DiagramType,
+    generate_diagram, 
+    generate_card_diagram,
+    generate_image_diagram
+)
 
-# 다이어그램 생성 코어 함수
-from .diagram_utils import generate_diagram
-
-# 개별 다이어그램 생성 함수
-from .card_diagram import generate_unified_card_diagram as generate_card_diagram
-from .image_diagram import generate_unified_image_diagram as generate_image_diagram
+from src.core.content.generator.svg.responsive_utils import (
+    add_responsive_script,
+    wrap_text
+)
 
 __all__ = [
     # 통합 인터페이스
@@ -34,7 +37,7 @@ __all__ = [
     'add_responsive_script',
     'wrap_text',
     
-    # 개별 다이어그램 생성 함수 (직관적인 이름으로 제공)
+    # 개별 다이어그램 생성 함수
     'generate_card_diagram',
     'generate_image_diagram'
 ] 

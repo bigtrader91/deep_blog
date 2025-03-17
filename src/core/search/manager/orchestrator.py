@@ -5,12 +5,16 @@
 """
 import os
 import asyncio
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional, Union, Literal
 
 from langsmith import traceable
 
-from src.core.search.formatters.source_formatter import SourceFormatter
+from src.core.content.formatters.source_formatter import SourceFormatter
 from src.common.logging import get_logger
+from src.common.config.search import SearchAPI
+from src.core.search.engines.web_engines import PerplexitySearcher, ExaSearcher, TavilySearcher
+from src.core.search.engines.naver import NaverCrawler
+from src.core.search.engines.google import GoogleNews
 
 # 로거 설정
 logger = get_logger(__name__)
@@ -227,3 +231,87 @@ class SearchOrchestrator:
                 'results': [],
                 'error': str(e)
             } for query in query_list]
+
+def create_searcher(search_api: Union[str, SearchAPI], api_key: Optional[str] = None) -> Any:
+    """
+    검색 API에 맞는 검색기를 생성합니다.
+    
+    Args:
+        search_api: 사용할 검색 API (SearchAPI Enum 또는 문자열)
+        api_key: 검색 API 키 (선택적)
+        
+    Returns:
+        검색기 인스턴스
+    
+    Raises:
+        ValueError: 지원되지 않는 검색 API가 제공된 경우
+    """
+    # 문자열을 Enum으로 변환
+    if isinstance(search_api, str):
+        try:
+            search_api = SearchAPI(search_api.lower())
+        except ValueError:
+            logger.error(f"지원되지 않는 검색 API: {search_api}")
+            raise ValueError(f"지원되지 않는 검색 API: {search_api}")
+    
+    # 검색기 생성
+    if search_api == SearchAPI.PERPLEXITY:
+        return PerplexitySearcher(api_key=api_key)
+    elif search_api == SearchAPI.TAVILY:
+        return TavilySearcher(api_key=api_key)
+    elif search_api == SearchAPI.EXA:
+        return ExaSearcher(api_key=api_key)
+    elif search_api == SearchAPI.NAVER:
+        return NaverCrawler(client_id=os.getenv("NAVER_CLIENT_ID"), 
+                           client_secret=os.getenv("NAVER_CLIENT_SECRET"))
+    elif search_api == SearchAPI.GOOGLE:
+        return GoogleNews()
+    else:
+        logger.error(f"지원되지 않는 검색 API: {search_api}")
+        raise ValueError(f"지원되지 않는 검색 API: {search_api}")
+
+async def multi_search(search_api: Union[str, SearchAPI], 
+                      queries: List[str], 
+                      api_key: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    여러 쿼리에 대해 검색을 수행합니다.
+    
+    Args:
+        search_api: 사용할 검색 API
+        queries: 검색 쿼리 목록
+        api_key: 검색 API 키 (선택적)
+        
+    Returns:
+        검색 결과 목록
+    """
+    try:
+        # 검색기 생성
+        searcher = create_searcher(search_api, api_key)
+        
+        # 검색 수행
+        if hasattr(searcher, 'search_all'):
+            return await searcher.search_all(queries)
+        else:
+            # search_all 메서드가 없는 경우 수동으로 결과 조합
+            results = []
+            for query in queries:
+                if hasattr(searcher, 'search'):
+                    if callable(getattr(searcher, 'search')):
+                        try:
+                            # 비동기 메서드 호출
+                            query_results = await searcher.search(query)
+                            results.append({
+                                'query': query,
+                                'results': query_results
+                            })
+                        except Exception as e:
+                            logger.error(f"쿼리 '{query}' 검색 중 오류: {str(e)}")
+                            results.append({
+                                'query': query,
+                                'results': [],
+                                'error': str(e)
+                            })
+            return results
+    except Exception as e:
+        logger.error(f"검색 중 오류 발생: {str(e)}")
+        return []

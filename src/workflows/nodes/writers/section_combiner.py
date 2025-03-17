@@ -46,8 +46,8 @@ def combine_blog_sections(state: BlogState, config: RunnableConfig) -> dict:
     system_instructions = combine_sections_instructions.format(topic=topic, sections=sections_str)
     
     # Generate final blog post
-    writer_provider = get_config_value(configurable.writer_provider)
-    writer_model_name = get_config_value(configurable.writer_model)
+    writer_provider = configurable.writer_provider
+    writer_model_name = configurable.writer_model
     writer_model = init_chat_model(model=writer_model_name, model_provider=writer_provider, temperature=0) 
     
     blog_post = writer_model.invoke([SystemMessage(content=system_instructions),

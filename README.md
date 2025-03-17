@@ -140,3 +140,46 @@ GET /health
 ## 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+
+## 새로운 기능: 마크다운 변환기
+
+Deep Blog 프로젝트에 마크다운을 HTML로 변환하는 기능이 추가되었습니다. 이 기능은 다음과 같은 특징을 가지고 있습니다:
+
+- LangChain과 LangGraph를 활용한 워크플로우 기반 변환
+- 문서 내용에 기반한 자동 테마 추천
+- 목차(TOC) 자동 생성
+- 깔끔하고 스타일이 적용된 HTML 출력
+
+### 사용 방법
+
+```python
+from src.app import markdown_to_html
+
+# 기본 사용법
+html_result = markdown_to_html("# 제목\n\n내용...")
+
+# 테마 지정
+html_result = markdown_to_html("# 제목\n\n내용...", theme_name="purple")
+
+# 파일로 저장
+html_result = markdown_to_html("# 제목\n\n내용...", 
+                               theme_name="green", 
+                               output_path="output.html")
+```
+
+### 예제 실행
+
+```bash
+# 예제 스크립트 실행
+python examples/markdown_converter_example.py
+```
+
+### 설치 및 실행
+
+```bash
+# 의존성 설치
+pip install -r requirements.txt
+
+# 환경 변수 설정
+# .env 파일에 OPENAI_API_KEY=your_api_key 추가
+```

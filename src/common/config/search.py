@@ -13,6 +13,8 @@ class SearchAPI(Enum):
     ARXIV = "arxiv"
     PUBMED = "pubmed"
     LINKUP = "linkup"
+    NAVER = "naver"
+    GOOGLE = "google"
 
 @dataclass(kw_only=True)
 class SearchConfiguration(BaseConfiguration):

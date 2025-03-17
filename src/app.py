@@ -16,6 +16,10 @@ from datetime import datetime
 from src.workflows.workflow import generate_blog
 from src.common.config.providers import set_config_value
 from src.common.config import Configuration
+from src.common.config.theme_styles import Theme
+
+# 마크다운 변환 기능 추가
+from src.workflows.graphs.markdown_workflow import convert_markdown_to_html
 
 # 로깅 설정
 logging.basicConfig(
@@ -91,6 +95,40 @@ async def generate_blog_task(job_id: str, topic: str, config: Dict[str, Any] = N
         blog_jobs[job_id]["status"] = "failed"
         blog_jobs[job_id]["message"] = error_msg
         blog_jobs[job_id]["completed_at"] = datetime.now().isoformat()
+
+
+def markdown_to_html(markdown_text: str, theme_name: Optional[str] = None, output_path: Optional[str] = None) -> str:
+    """
+    마크다운 텍스트를 HTML로 변환합니다.
+    
+    Args:
+        markdown_text (str): 변환할 마크다운 텍스트
+        theme_name (Optional[str], optional): 테마 이름 ('purple', 'green', 'blue', 'orange')
+        output_path (Optional[str], optional): 결과를 저장할 파일 경로
+        
+    Returns:
+        str: 변환된 HTML 코드
+    """
+    # 테마 설정
+    theme = None
+    if theme_name:
+        try:
+            theme = Theme(theme_name.lower())
+        except ValueError:
+            print(f"지원하지 않는 테마입니다: {theme_name}. 'purple', 'green', 'blue', 'orange' 중 하나를 사용하세요.")
+            theme = Theme.PURPLE
+
+    # 마크다운 변환 실행
+    html_result = convert_markdown_to_html(markdown_text, theme)
+    
+    # 결과 저장
+    if output_path:
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(html_result)
+        print(f"HTML이 저장되었습니다: {output_path}")
+    
+    return html_result
 
 
 @app.post("/blog", response_model=BlogResponse, status_code=202)

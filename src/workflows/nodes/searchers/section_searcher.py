@@ -17,6 +17,8 @@ from langchain_core.runnables import RunnableConfig
 
 from src.common.config import Configuration
 from src.common.config.providers import get_config_value
+from src.common.config.search import SearchAPI
+from src.core.search.manager.orchestrator import create_searcher, multi_search
 from src.workflows.states.blog_state import SectionState
 from src.prompts import search_query_generator_instructions
 
@@ -39,6 +41,9 @@ def generate_queries(state: SectionState, config: RunnableConfig) -> Dict[str, A
     Returns:
         생성된 검색 쿼리가 포함된 딕셔너리
     """
+    # 디버깅을 위해 state 딕셔너리 내용 출력
+    logger.info(f"generate_queries 함수의 state 딕셔너리: {state}")
+    
     # Get configuration
     configurable = Configuration.from_runnable_config(config)
     
@@ -60,8 +65,8 @@ def generate_queries(state: SectionState, config: RunnableConfig) -> Dict[str, A
     )
     
     # Generate queries using planner model
-    planner_provider = get_config_value(configurable.planner_provider)
-    planner_model_name = get_config_value(configurable.planner_model)
+    planner_provider = configurable.planner_provider
+    planner_model_name = configurable.planner_model
     planner_model = init_chat_model(model=planner_model_name, model_provider=planner_provider, temperature=0)
     
     logger.info(f"'{section.name}' 섹션에 대한 검색 쿼리 생성 중...")
@@ -84,44 +89,6 @@ def generate_queries(state: SectionState, config: RunnableConfig) -> Dict[str, A
     logger.info(f"'{section.name}' 섹션에 대해 {len(queries)}개의 쿼리가 생성되었습니다.")
     
     return {"search_queries": queries}
-
-
-async def _search_tavily(query: str, api_key: str) -> Dict[str, Any]:
-    """Tavily 검색 API를 사용하여 웹 검색을 수행합니다.
-    
-    Args:
-        query: 검색 쿼리
-        api_key: Tavily API 키
-        
-    Returns:
-        검색 결과 사전
-    """
-    headers = {
-        "Content-Type": "application/json",
-        "X-API-Key": api_key
-    }
-    
-    data = {
-        "query": query,
-        "search_depth": "advanced",
-        "include_domains": [],
-        "exclude_domains": [],
-        "max_results": 5
-    }
-    
-    async with aiohttp.ClientSession() as session:
-        async with session.post(
-            "https://api.tavily.com/search",
-            headers=headers,
-            json=data
-        ) as response:
-            if response.status == 200:
-                result = await response.json()
-                return result
-            else:
-                error_text = await response.text()
-                logger.error(f"Tavily 검색 오류: {error_text}")
-                return {"results": []}
 
 
 async def search_web(state: SectionState, config: RunnableConfig) -> Dict[str, Any]:
@@ -149,40 +116,44 @@ async def search_web(state: SectionState, config: RunnableConfig) -> Dict[str, A
         return {"search_results": []}
     
     # Get API key for search
-    search_provider = get_config_value(configurable.searcher_provider)
+    search_provider = configurable.searcher_provider
     search_api_key = get_config_value(configurable.searcher_api_key)
     
-    if not search_api_key:
-        logger.error(f"{search_provider} API 키를 찾을 수 없습니다.")
-        return {"search_results": []}
-    
-    # Perform search for each query
     logger.info(f"{len(search_queries)}개의 쿼리로 {search_provider} 검색을 수행합니다...")
     
     all_results = []
     
-    # Currently only support Tavily
-    if search_provider == "tavily":
-        search_tasks = [_search_tavily(query, search_api_key) for query in search_queries]
-        tavily_results = await asyncio.gather(*search_tasks)
+    try:
+        # 통합 검색 방식 사용 (orchestrator의 multi_search 활용)
+        search_results = await multi_search(search_provider, search_queries, search_api_key)
         
-        # Process Tavily results
-        for query, result in zip(search_queries, tavily_results):
-            if "results" in result:
-                for item in result["results"]:
-                    all_results.append({
-                        "title": item.get("title", ""),
-                        "url": item.get("url", ""),
-                        "content": item.get("content", ""),
-                        "score": item.get("score", 0),
-                        "source_type": "tavily",
-                        "query": query,
-                        "metadata": {
-                            "crawled_at": datetime.now().isoformat()
-                        }
-                    })
-    else:
-        logger.warning(f"지원되지 않는 검색 제공자: {search_provider}")
+        # 검색 결과 처리
+        for result_set in search_results:
+            query = result_set.get('query', '')
+            results = result_set.get('results', [])
+            
+            for item in results:
+                # 표준화된 결과 형식으로 변환
+                formatted_result = {
+                    "title": item.get("title", ""),
+                    "url": item.get("url", ""),
+                    "content": item.get("content", ""),
+                    "score": item.get("score", 0),
+                    "source_type": search_provider,
+                    "query": query,
+                    "metadata": {
+                        "crawled_at": datetime.now().isoformat()
+                    }
+                }
+                
+                # 원본 콘텐츠가 있으면 추가
+                if "raw_content" in item:
+                    formatted_result["raw_content"] = item["raw_content"]
+                
+                all_results.append(formatted_result)
+    
+    except Exception as e:
+        logger.error(f"검색 중 오류 발생: {str(e)}")
     
     logger.info(f"총 {len(all_results)}개의 검색 결과를 찾았습니다.")
     

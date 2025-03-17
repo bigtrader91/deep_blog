@@ -39,13 +39,36 @@ def plan_sections(state: BlogState, config: RunnableConfig) -> dict:
     system_instructions = section_planner_instructions.format(topic=topic, num_sections=configurable.number_of_blog_sections)
     
     # Generate section plan using planner model
-    planner_provider = get_config_value(configurable.planner_provider)
-    planner_model_name = get_config_value(configurable.planner_model)
-    planner_model = init_chat_model(model=planner_model_name, model_provider=planner_provider, temperature=0).with_structured_output(List[BlogSection])
+    planner_provider = configurable.planner_provider
+    planner_model_name = configurable.planner_model
+    planner_model = init_chat_model(model=planner_model_name, model_provider=planner_provider, temperature=0)
     
     # Get section plan and convert to correct type
-    section_plan = planner_model.invoke([SystemMessage(content=system_instructions),
-                                       HumanMessage(content=f"Plan sections for a blog post about '{topic}'.")])
+    response = planner_model.invoke([SystemMessage(content=system_instructions),
+                                    HumanMessage(content=f"Plan sections for a blog post about '{topic}'.")])
+    
+    # 응답을 파싱하여 BlogSection 객체 목록으로 변환
+    section_text = response.content
+    section_list = []
+    
+    # 응답 텍스트에서 섹션 정보 추출
+    import re
+    sections = re.split(r'\n\s*\d+\.\s+', section_text)
+    sections = [s for s in sections if s.strip()]  # 빈 섹션 제거
+    
+    for section_content in sections:
+        lines = section_content.strip().split('\n')
+        if not lines:
+            continue
+            
+        # 첫 번째 줄을 섹션 이름으로 사용
+        name = lines[0].strip()
+        # 나머지 줄을 설명으로 사용
+        description = '\n'.join(lines[1:]).strip() if len(lines) > 1 else ""
+        
+        # BlogSection 객체 생성
+        section = BlogSection(name=name, description=description)
+        section_list.append(section)
     
     # Return the updated state
-    return {"sections": section_plan, "research_needed_sections": section_plan} 
+    return {"sections": section_list, "research_needed_sections": section_list} 

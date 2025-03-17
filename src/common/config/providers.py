@@ -27,6 +27,15 @@ ENV_VARS = {
     "exa": "EXA_API_KEY",
     "serper": "SERPER_API_KEY",
     
+    # 네이버 검색
+    "naver": "NAVER_API_KEY",
+    "naver_client_id": "NAVER_CLIENT_ID",
+    "naver_client_secret": "NAVER_CLIENT_SECRET",
+    
+    # 구글 검색
+    "google": "GOOGLE_API_KEY",
+    "google_cx": "GOOGLE_CX",
+    
     # 학술 검색
     "pubmed": "PUBMED_API_KEY",
     "arxiv": "ARXIV_API_KEY",
